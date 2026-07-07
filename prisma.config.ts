@@ -16,6 +16,6 @@ export default defineConfig({
   // build). La valeur reste bien requise au runtime pour toute commande qui
   // interroge réellement la base (migrate, db push, le client généré...).
   datasource: {
-    url: process.env.DATABASE_URL,
+    url: process.env.DATABASE_URL ?? "",
   },
 });
