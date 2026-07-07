@@ -1,0 +1,67 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export function ConversionForm() {
+  const router = useRouter();
+  const [amount, setAmount] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    const amountEuros = Number(amount);
+    if (!Number.isFinite(amountEuros) || amountEuros <= 0) {
+      setError("Montant invalide.");
+      return;
+    }
+
+    setLoading(true);
+    const res = await fetch("/api/conversions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amountEuros }),
+    });
+    setLoading(false);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(typeof data.error === "string" ? data.error : "Impossible de créer la demande.");
+      return;
+    }
+
+    setSuccess("Demande de reconversion envoyée à l'association.");
+    setAmount("");
+    router.refresh();
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex max-w-sm flex-col gap-4">
+      <label className="flex flex-col gap-1">
+        Montant à reconvertir en euros
+        <input
+          type="number"
+          min="0.01"
+          step="0.01"
+          required
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          className="rounded border border-neutral-300 px-3 py-2"
+        />
+      </label>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      {success && <p className="text-sm text-leaf-700">{success}</p>}
+      <button
+        type="submit"
+        disabled={loading}
+        className="rounded bg-brand-700 px-4 py-2 text-white hover:bg-brand-800 disabled:opacity-50"
+      >
+        {loading ? "Envoi..." : "Demander la reconversion"}
+      </button>
+    </form>
+  );
+}

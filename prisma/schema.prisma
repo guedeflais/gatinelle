@@ -1,0 +1,135 @@
+// Schéma de données de l'application Gâtinelle
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountType {
+  PARTICULIER
+  COMMERCANT
+}
+
+enum StaffRole {
+  AGENT
+  ADMIN
+}
+
+enum LotStatus {
+  ACTIVE
+  EXPIRED
+  CONVERTED
+}
+
+enum TransactionType {
+  PURCHASE
+  PAYMENT
+  CONVERSION
+  EXPIRY
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  REJECTED
+}
+
+model User {
+  id                String      @id @default(cuid())
+  email             String      @unique
+  passwordHash      String
+  fullName          String
+  accountType       AccountType
+  staffRole         StaffRole?
+  createdAt         DateTime    @default(now())
+
+  // Connexion rapide en caisse : numéro d'adhérent (1 lettre + 5 chiffres) +
+  // code PIN à 4 chiffres, sur le modèle de l'Eusko (Euskal Moneta). Bloqué
+  // après 3 échecs — déblocage par un administrateur, voir lib/pin.ts.
+  memberNumber      String      @unique
+  pinHash           String
+  pinFailedAttempts Int         @default(0)
+  pinBlocked        Boolean     @default(false)
+
+  wallet          Wallet?
+  merchantProfile MerchantProfile?
+
+  validatedMerchants   MerchantProfile[] @relation("MerchantValidatedBy")
+  validatedTransactions Transaction[]    @relation("TransactionValidatedBy")
+  sentTransactions     Transaction[]     @relation("TransactionFrom")
+  receivedTransactions Transaction[]     @relation("TransactionTo")
+}
+
+model MerchantProfile {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id])
+  businessName  String
+  address       String
+  category      String
+  iban          String?
+  merchantCode  String    @unique
+  validated     Boolean   @default(false)
+  validatedById String?
+  validatedBy   User?     @relation("MerchantValidatedBy", fields: [validatedById], references: [id])
+  validatedAt   DateTime?
+  createdAt     DateTime  @default(now())
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  lots GatinelleLot[]
+}
+
+// Montants exprimés en centimes de gâtinelle (Int) pour éviter les erreurs
+// d'arrondi liées aux nombres flottants — 1 gâtinelle = 100.
+model GatinelleLot {
+  id                  String    @id @default(cuid())
+  walletId            String
+  wallet              Wallet    @relation(fields: [walletId], references: [id])
+  amountCents         Int
+  remainingCents      Int
+  acquiredAt          DateTime  @default(now())
+  // Non nul uniquement pour les lots détenus par un portefeuille PARTICULIER.
+  // Les lots détenus par un COMMERCANT ont toujours expiresAt = null (pas de péremption).
+  expiresAt           DateTime?
+  status              LotStatus @default(ACTIVE)
+  sourceTransactionId String?
+
+  @@index([walletId, status])
+  @@index([expiresAt])
+}
+
+model Transaction {
+  id                    String             @id @default(cuid())
+  type                  TransactionType
+  fromUserId            String?
+  fromUser              User?              @relation("TransactionFrom", fields: [fromUserId], references: [id])
+  toUserId              String?
+  toUser                User?              @relation("TransactionTo", fields: [toUserId], references: [id])
+  amountCents           Int
+  paymentMethod         PaymentMethod?
+  status                TransactionStatus  @default(PENDING)
+  validatedById         String?
+  validatedBy           User?              @relation("TransactionValidatedBy", fields: [validatedById], references: [id])
+  validatedAt           DateTime?
+  providerReference     String?            @unique
+  createdAt             DateTime           @default(now())
+
+  @@index([type, status])
+}
