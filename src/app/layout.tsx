@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Lora, Roboto } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
@@ -22,6 +22,23 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: "La Gâtinelle",
   description: "Gestion de la monnaie locale la Gâtinelle",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Gâtinelle",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#e1523d",
 };
 
 export default function RootLayout({
