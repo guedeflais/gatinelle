@@ -89,7 +89,17 @@ vérification de signature RSA ; et le verrouillage PIN (`src/lib/pin.ts`).
 
 ## Base de données
 
-SQLite en développement (fichier `prisma/dev.db`, ignoré par git). Avant une
-mise en production avec plusieurs utilisateurs simultanés, migrez vers
-PostgreSQL (changement du `provider` dans `prisma/schema.prisma` +
-`prisma migrate`).
+PostgreSQL (Prisma Postgres via Vercel Storage en production). Le schéma
+requiert désormais une vraie base Postgres, y compris en local : pas de mode
+SQLite de secours. Pour développer en local, utilisez soit la même base que
+la production (avec précaution, ce sont de vraies données), soit une base
+Postgres gratuite dédiée au développement (Neon, Prisma Postgres...) et son
+propre `DATABASE_URL` dans `.env`.
+
+Les migrations s'appliquent automatiquement à chaque déploiement Vercel
+(`prisma migrate deploy` intégré au script `build`). En local, après une
+modification du schéma :
+
+```bash
+npx prisma migrate dev --name <description>
+```

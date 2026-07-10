@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "pretest": "cross-env DATABASE_URL=file:./prisma/test.db prisma db push --skip-generate",
-    "test": "cross-env DATABASE_URL=file:./prisma/test.db jest --runInBand"
+    "pretest": "prisma db push --skip-generate",
+    "test": "jest --runInBand"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
