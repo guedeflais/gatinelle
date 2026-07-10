@@ -3,6 +3,7 @@ import { Lora, Roboto } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { NavBar } from "@/components/NavBar";
+import { Footer } from "@/components/Footer";
 
 // Polices reprises du site de l'association (gatinemois.com) : Lora pour les
 // titres, Roboto pour le texte courant.
@@ -34,6 +35,7 @@ export default function RootLayout({
         <Providers>
           <NavBar />
           <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">{children}</main>
+          <Footer />
         </Providers>
       </body>
     </html>
