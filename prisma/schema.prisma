@@ -62,6 +62,13 @@ model User {
   pinFailedAttempts Int         @default(0)
   pinBlocked        Boolean     @default(false)
 
+  // Connexion email + mot de passe : pas de blocage permanent (l'email est
+  // trop facile à connaître, un blocage définitif serait un vecteur de déni
+  // de service contre n'importe quel adhérent) — une pause temporaire
+  // auto-expirante après plusieurs échecs, voir lib/auth.ts.
+  passwordFailedAttempts Int      @default(0)
+  passwordLockedUntil    DateTime?
+
   wallet          Wallet?
   merchantProfile MerchantProfile?
 

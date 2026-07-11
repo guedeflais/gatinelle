@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { expireLots } from "@/lib/wallet";
+import { timingSafeEqualString } from "@/lib/security";
 
 /**
  * Job de péremption quotidien. À déclencher une fois par jour par un
@@ -10,7 +11,7 @@ import { expireLots } from "@/lib/wallet";
 async function run(request: Request) {
   const expected = process.env.CRON_SECRET;
   const authHeader = request.headers.get("authorization");
-  if (!expected || authHeader !== `Bearer ${expected}`) {
+  if (!expected || !authHeader || !timingSafeEqualString(authHeader, `Bearer ${expected}`)) {
     return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   }
 

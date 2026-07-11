@@ -1,8 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
-import { prisma } from "./prisma";
 import { attemptPinLogin } from "./pin";
+import { attemptPasswordLogin } from "./passwordAuth";
 import type { AccountType, StaffRole } from "@prisma/client";
 
 declare module "next-auth" {
@@ -42,24 +41,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const email = credentials?.email;
         const password = credentials?.password;
         if (typeof email !== "string" || typeof password !== "string") return null;
-
-        const user = await prisma.user.findUnique({
-          where: { email: email.toLowerCase() },
-          include: { merchantProfile: true },
-        });
-        if (!user) return null;
-
-        const valid = await bcrypt.compare(password, user.passwordHash);
-        if (!valid) return null;
-
-        return {
-          id: user.id,
-          email: user.email,
-          fullName: user.fullName,
-          accountType: user.accountType,
-          staffRole: user.staffRole,
-          merchantId: user.merchantProfile?.id ?? null,
-        };
+        return attemptPasswordLogin(email, password);
       },
     }),
     // Connexion rapide en caisse (numéro d'adhérent + PIN à 4 chiffres),
