@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { NavBar } from "@/components/NavBar";
 import { Footer } from "@/components/Footer";
+import { RegisterServiceWorker } from "@/components/RegisterServiceWorker";
 
 // Polices reprises du site de l'association (gatinemois.com) : Lora pour les
 // titres, Roboto pour le texte courant.
@@ -49,6 +50,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${lora.variable} ${roboto.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <RegisterServiceWorker />
         <Providers>
           <NavBar />
           <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">{children}</main>
