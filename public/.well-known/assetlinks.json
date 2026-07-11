@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "fr.gatinelle.app",
+    "sha256_cert_fingerprints": ["FC:E7:D9:E2:E8:17:F6:E4:5D:62:27:18:AE:8C:71:9E:4D:C4:6E:5E:A2:D5:6B:1F:87:D2:EE:48:9D:67:E8:0B"]
+  }
+}]
