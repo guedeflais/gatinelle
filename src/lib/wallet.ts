@@ -171,10 +171,17 @@ export async function payMerchant(
     for (const lot of activeLots) {
       if (remainingToSpend <= 0) break;
       const draw = Math.min(lot.remainingCents, remainingToSpend);
-      await tx.gatinelleLot.update({
-        where: { id: lot.id },
+      // Décrément gardé : la clause remainingCents >= draw est réévaluée par
+      // Postgres sur la valeur réelle au moment de l'écriture (pas sur notre
+      // lecture initiale), ce qui empêche deux paiements concurrents de vider
+      // le même lot en double (double dépense).
+      const result = await tx.gatinelleLot.updateMany({
+        where: { id: lot.id, remainingCents: { gte: draw } },
         data: { remainingCents: { decrement: draw } },
       });
+      if (result.count === 0) {
+        throw new InsufficientBalanceError();
+      }
       remainingToSpend -= draw;
     }
 
@@ -238,14 +245,24 @@ export async function requestConversion(merchantUserId: string, amountCents: num
     for (const lot of activeLots) {
       if (remainingToConvert <= 0) break;
       const draw = Math.min(lot.remainingCents, remainingToConvert);
-      const newRemaining = lot.remainingCents - draw;
-      await tx.gatinelleLot.update({
-        where: { id: lot.id },
-        data: {
-          remainingCents: newRemaining,
-          status: newRemaining === 0 ? LotStatus.CONVERTED : LotStatus.ACTIVE,
-        },
+      // Décrément gardé (voir payMerchant) : empêche deux demandes de
+      // reconversion concurrentes de vider le même lot en double.
+      const result = await tx.gatinelleLot.updateMany({
+        where: { id: lot.id, remainingCents: { gte: draw } },
+        data: { remainingCents: { decrement: draw } },
       });
+      if (result.count === 0) {
+        throw new InsufficientBalanceError();
+      }
+      // Relit la valeur réelle (pas notre lecture initiale, potentiellement
+      // périmée) pour décider si le lot est entièrement converti.
+      const refreshed = await tx.gatinelleLot.findUniqueOrThrow({ where: { id: lot.id } });
+      if (refreshed.remainingCents === 0) {
+        await tx.gatinelleLot.update({
+          where: { id: lot.id },
+          data: { status: LotStatus.CONVERTED },
+        });
+      }
       remainingToConvert -= draw;
     }
 

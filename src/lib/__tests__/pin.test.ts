@@ -83,4 +83,20 @@ describe("attemptPinLogin", () => {
     const result = await attemptPinLogin(user.memberNumber, "12");
     expect(result).toBeNull();
   });
+
+  it("bloque après MAX_PIN_ATTEMPTS même avec des tentatives concurrentes", async () => {
+    const user = await createUserWithPin("1234");
+
+    // Beaucoup plus de tentatives concurrentes que le seuil : si le compteur
+    // n'était pas incrémenté atomiquement, ces lectures/écritures en parallèle
+    // pourraient toutes partir de pinFailedAttempts=0 et jamais atteindre le
+    // seuil de blocage.
+    await Promise.all(
+      Array.from({ length: MAX_PIN_ATTEMPTS * 5 }, () => attemptPinLogin(user.memberNumber, "0000"))
+    );
+
+    const refreshed = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+    expect(refreshed.pinBlocked).toBe(true);
+    expect(refreshed.pinFailedAttempts).toBeGreaterThanOrEqual(MAX_PIN_ATTEMPTS);
+  });
 });

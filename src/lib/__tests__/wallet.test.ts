@@ -184,6 +184,28 @@ describe("payMerchant — dépense FIFO par date d'expiration", () => {
 
     await expect(payMerchant(buyer.id, merchantProfile.merchantCode, 100)).rejects.toThrow();
   });
+
+  it("empêche la double dépense lors de deux paiements concurrents", async () => {
+    const { wallet: buyerWallet, user: buyer } = await createParticulier();
+    const { merchantProfile, wallet: merchantWallet } = await createMerchant();
+    const tx = await createPurchaseTransaction(buyer.id, 100);
+    await createPurchaseLot(prisma, buyerWallet.id, AccountType.PARTICULIER, 100, tx.id);
+
+    // Solde de 100 : deux paiements de 100 tirés en parallèle ne doivent
+    // aboutir qu'une seule fois (pas de double dépense par lecture périmée).
+    const results = await Promise.allSettled([
+      payMerchant(buyer.id, merchantProfile.merchantCode, 100),
+      payMerchant(buyer.id, merchantProfile.merchantCode, 100),
+    ]);
+
+    const fulfilled = results.filter((r) => r.status === "fulfilled");
+    expect(fulfilled).toHaveLength(1);
+
+    const buyerBalance = await getBalanceCents(prisma, buyerWallet.id);
+    const merchantBalance = await getBalanceCents(prisma, merchantWallet.id);
+    expect(buyerBalance).toBe(0);
+    expect(merchantBalance).toBe(100);
+  });
 });
 
 describe("requestConversion / completeConversion", () => {
@@ -212,6 +234,23 @@ describe("requestConversion / completeConversion", () => {
     const completed = await completeConversion(conversion.id, admin.id);
     expect(completed.status).toBe("COMPLETED");
     void merchantProfile;
+  });
+
+  it("empêche la double reconversion lors de deux demandes concurrentes", async () => {
+    const { wallet: merchantWallet, user: merchant } = await createMerchant();
+    const tx = await createPurchaseTransaction(merchant.id, 100);
+    await createPurchaseLot(prisma, merchantWallet.id, AccountType.COMMERCANT, 100, tx.id);
+
+    const results = await Promise.allSettled([
+      requestConversion(merchant.id, 100),
+      requestConversion(merchant.id, 100),
+    ]);
+
+    const fulfilled = results.filter((r) => r.status === "fulfilled");
+    expect(fulfilled).toHaveLength(1);
+
+    const balance = await getBalanceCents(prisma, merchantWallet.id);
+    expect(balance).toBe(0);
   });
 });
 

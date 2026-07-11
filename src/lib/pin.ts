@@ -35,14 +35,21 @@ export async function attemptPinLogin(
   const valid = await bcrypt.compare(pin, user.pinHash);
 
   if (!valid) {
-    const attempts = user.pinFailedAttempts + 1;
-    await prisma.user.update({
+    // Incrément atomique côté base (SET x = x + 1) : contrairement à un calcul
+    // en mémoire suivi d'une écriture, il ne peut pas être perdu si plusieurs
+    // tentatives de PIN arrivent en même temps — sinon un essai en parallèle
+    // permettrait de dépasser MAX_PIN_ATTEMPTS et de forcer le PIN par
+    // essais concurrents (l'espace à 4 chiffres n'a que 10 000 combinaisons).
+    const updated = await prisma.user.update({
       where: { id: user.id },
-      data: {
-        pinFailedAttempts: attempts,
-        pinBlocked: attempts >= MAX_PIN_ATTEMPTS,
-      },
+      data: { pinFailedAttempts: { increment: 1 } },
     });
+    if (updated.pinFailedAttempts >= MAX_PIN_ATTEMPTS) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { pinBlocked: true },
+      });
+    }
     return null;
   }
 
