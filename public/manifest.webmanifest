@@ -8,6 +8,14 @@
   "background_color": "#f7f3ef",
   "theme_color": "#e1523d",
   "lang": "fr",
+  "orientation": "portrait-primary",
+  "id": "/",
+  "categories": ["finance"],
+  "serviceworker": {
+    "src": "/sw.js",
+    "scope": "/",
+    "update_via_cache": "none"
+  },
   "icons": [
     {
       "src": "/icon-192.png",
