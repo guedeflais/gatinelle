@@ -13,6 +13,9 @@ export function Footer() {
         <Link href="/confidentialite" className="hover:text-neutral-700">
           Politique de confidentialité
         </Link>
+        <Link href="/suppression-compte" className="hover:text-neutral-700">
+          Suppression de compte
+        </Link>
       </div>
     </footer>
   );

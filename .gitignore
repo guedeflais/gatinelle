@@ -50,3 +50,6 @@ next-env.d.ts
 /prisma/dev.db
 /prisma/prisma/
 /prisma/*.db-journal
+
+.vercel
+.env*
