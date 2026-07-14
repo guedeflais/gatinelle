@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getBalanceCents } from "@/lib/wallet";
 import { formatGatinelles } from "@/lib/money";
 import { PinChangeForm } from "@/components/PinChangeForm";
+import { ProfileEditForm } from "@/components/ProfileEditForm";
 
 const TRANSACTION_LABELS: Record<string, string> = {
   PURCHASE: "Achat",
@@ -44,7 +45,14 @@ export default async function ComptePage({
     }),
     prisma.user.findUniqueOrThrow({
       where: { id: session.user.id },
-      select: { memberNumber: true },
+      select: {
+        memberNumber: true,
+        fullName: true,
+        email: true,
+        merchantProfile: {
+          select: { businessName: true, address: true, category: true, iban: true },
+        },
+      },
     }),
   ]);
 
@@ -129,6 +137,19 @@ export default async function ComptePage({
             )}
           </tbody>
         </table>
+      </div>
+
+      <div>
+        <h2 className="mb-3 text-lg font-medium">Mon profil</h2>
+        <ProfileEditForm
+          fullName={user.fullName}
+          email={user.email}
+          merchant={
+            user.merchantProfile
+              ? { ...user.merchantProfile, iban: user.merchantProfile.iban ?? "" }
+              : undefined
+          }
+        />
       </div>
 
       <div>
