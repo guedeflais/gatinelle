@@ -38,8 +38,10 @@ Association Ici en Gâtine Poitevine - Gâtin'émois
 36 route de Thouars, 79200 Châtillon-sur-Thouet
 association@gatinemois.fr
 
-## Catégorie
-Finance (ou Économie et entreprise, selon la classification disponible)
+## Catégorie et tags
+- Catégorie : Finance
+- Tags : Paiements mobiles, Finances personnelles
+- Fonctionnalité financière déclarée : Paiements mobiles et portefeuilles numériques
 
 ## Coordonnées du développeur (compte Play Console)
 - Nom de l'association : Ici en Gâtine Poitevine - Gâtin'émois
@@ -65,9 +67,11 @@ Données collectées et pourquoi :
 
 Pratiques de sécurité à déclarer :
 - Données chiffrées en transit (HTTPS/TLS)
-- Possibilité de demander la suppression du compte (à confirmer selon le processus mis en place — voir politique de confidentialité)
+- Suppression de compte sur demande : https://www.gatinelle.fr/suppression-compte
 - Aucune donnée vendue à des tiers
 - Aucune donnée partagée à des fins publicitaires
+
+Fichier CSV d'import rempli : `data_safety_gatinelle.csv` (déjà importé et validé dans Play Console).
 
 ## Éléments graphiques à préparer
 - Icône haute résolution 512x512 : disponible (`/icon-512.png`)
