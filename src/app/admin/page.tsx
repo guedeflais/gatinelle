@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCirculationStats } from "@/lib/wallet";
 import { formatGatinelles } from "@/lib/money";
 import { ActionButton } from "@/components/ActionButton";
+import { StandCreateForm } from "@/components/StandCreateForm";
 
 const METHOD_LABELS: Record<string, string> = {
   CASH: "Espèces",
@@ -41,6 +42,17 @@ export default async function AdminPage() {
         where: { validated: false },
         include: { user: true },
         orderBy: { createdAt: "asc" },
+      })
+    : [];
+
+  // Les stands d'événement se reconnaissent à leur adresse fixe ("Stand
+  // d'événement", voir /api/admin/stands) — permet de les lister à part sans
+  // toucher aux vrais commerçants validés dans l'annuaire.
+  const activeStands = staffIsAdmin
+    ? await prisma.merchantProfile.findMany({
+        where: { validated: true, address: "Stand d'événement" },
+        include: { user: true },
+        orderBy: { createdAt: "desc" },
       })
     : [];
 
@@ -210,6 +222,51 @@ export default async function AdminPage() {
                 ))}
               </tbody>
             </table>
+          )}
+        </section>
+      )}
+
+      {staffIsAdmin && (
+        <section>
+          <h2 className="mb-3 text-lg font-medium">Mode festival — créer un stand</h2>
+          <p className="mb-3 max-w-md text-sm text-neutral-600">
+            Crée un compte commerçant immédiatement validé pour un stand d&apos;événement,
+            sans passer par la file de validation habituelle.
+          </p>
+          <StandCreateForm />
+
+          {activeStands.length > 0 && (
+            <div className="mt-6">
+              <h3 className="mb-2 text-sm font-medium text-neutral-700">
+                Stands actifs (retirer après l&apos;événement)
+              </h3>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-neutral-500">
+                    <th className="py-2">Stand</th>
+                    <th>Catégorie</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeStands.map((m) => (
+                    <tr key={m.id} className="border-b border-neutral-100">
+                      <td className="py-2">{m.businessName}</td>
+                      <td>{m.category}</td>
+                      <td>
+                        <ActionButton
+                          url="/api/admin/merchants/validate"
+                          body={{ merchantProfileId: m.id, approve: false }}
+                          label="Retirer"
+                          confirmMessage="Retirer ce stand de l'annuaire ? L'historique de ses transactions reste conservé."
+                          className="rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
       )}

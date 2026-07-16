@@ -69,6 +69,11 @@ model User {
   passwordFailedAttempts Int      @default(0)
   passwordLockedUntil    DateTime?
 
+  // Bracelet/carte NFC lié pour le mode festival : numéro de série d'usine du
+  // tag, utilisé comme seule preuve d'autorisation pour les petits paiements
+  // au stand (voir payMerchantByWristband dans lib/wallet.ts).
+  nfcTagUid String? @unique
+
   wallet          Wallet?
   merchantProfile MerchantProfile?
 

@@ -34,6 +34,10 @@ export class InvalidStateError extends Error {
 
 const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 
+// Mode festival : sans PIN pour payer, le seul rempart est un plafond par
+// transaction (comme le sans-contact bancaire), pas un contrôle par code.
+export const MAX_WRISTBAND_PAYMENT_CENTS = 2000;
+
 /** Solde actif d'un portefeuille : somme des lots ACTIFS et non expirés. */
 export async function getBalanceCents(db: Db, walletId: string): Promise<number> {
   const result = await db.gatinelleLot.aggregate({
@@ -121,11 +125,79 @@ export async function validatePurchase(transactionId: string, validatorUserId: s
 }
 
 /**
- * Paiement d'un particulier (ou tout portefeuille) vers un commerçant.
  * Consomme les lots du payeur les plus proches de l'expiration en premier,
- * puis crédite un lot sans expiration côté commerçant (les gâtinelles
- * détenues par un commerçant n'expirent jamais).
+ * puis crédite un lot sans expiration côté destinataire (les gâtinelles
+ * détenues par un commerçant n'expirent jamais). Partagé par payMerchant
+ * (paiement par code) et payMerchantByWristband (paiement par bracelet NFC).
  */
+async function transferGatinelles(
+  tx: Db,
+  buyerUserId: string,
+  buyerWalletId: string,
+  recipientUserId: string,
+  recipientWalletId: string,
+  amountCents: number
+) {
+  const now = new Date();
+  const activeLots = await tx.gatinelleLot.findMany({
+    where: {
+      walletId: buyerWalletId,
+      status: LotStatus.ACTIVE,
+      remainingCents: { gt: 0 },
+      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+    },
+    orderBy: [{ expiresAt: { sort: "asc", nulls: "last" } }],
+  });
+
+  let remainingToSpend = amountCents;
+  for (const lot of activeLots) {
+    if (remainingToSpend <= 0) break;
+    const draw = Math.min(lot.remainingCents, remainingToSpend);
+    // Décrément gardé : la clause remainingCents >= draw est réévaluée par
+    // Postgres sur la valeur réelle au moment de l'écriture (pas sur notre
+    // lecture initiale), ce qui empêche deux paiements concurrents de vider
+    // le même lot en double (double dépense).
+    const result = await tx.gatinelleLot.updateMany({
+      where: { id: lot.id, remainingCents: { gte: draw } },
+      data: { remainingCents: { decrement: draw } },
+    });
+    if (result.count === 0) {
+      throw new InsufficientBalanceError();
+    }
+    remainingToSpend -= draw;
+  }
+
+  if (remainingToSpend > 0) {
+    throw new InsufficientBalanceError();
+  }
+
+  const transaction = await tx.transaction.create({
+    data: {
+      type: TransactionType.PAYMENT,
+      fromUserId: buyerUserId,
+      toUserId: recipientUserId,
+      amountCents,
+      status: TransactionStatus.COMPLETED,
+      validatedAt: now,
+    },
+  });
+
+  await tx.gatinelleLot.create({
+    data: {
+      walletId: recipientWalletId,
+      amountCents,
+      remainingCents: amountCents,
+      acquiredAt: now,
+      expiresAt: null,
+      status: LotStatus.ACTIVE,
+      sourceTransactionId: transaction.id,
+    },
+  });
+
+  return transaction;
+}
+
+/** Paiement d'un particulier (ou tout portefeuille) vers un commerçant, identifié par son code. */
 export async function payMerchant(
   buyerUserId: string,
   merchantCode: string,
@@ -156,63 +228,64 @@ export async function payMerchant(
       throw new InvalidStateError("Impossible de se payer soi-même.");
     }
 
-    const now = new Date();
-    const activeLots = await tx.gatinelleLot.findMany({
-      where: {
-        walletId: buyer.wallet.id,
-        status: LotStatus.ACTIVE,
-        remainingCents: { gt: 0 },
-        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-      },
-      orderBy: [{ expiresAt: { sort: "asc", nulls: "last" } }],
-    });
+    return transferGatinelles(
+      tx,
+      buyerUserId,
+      buyer.wallet.id,
+      merchantProfile.userId,
+      merchantProfile.user.wallet.id,
+      amountCents
+    );
+  });
+}
 
-    let remainingToSpend = amountCents;
-    for (const lot of activeLots) {
-      if (remainingToSpend <= 0) break;
-      const draw = Math.min(lot.remainingCents, remainingToSpend);
-      // Décrément gardé : la clause remainingCents >= draw est réévaluée par
-      // Postgres sur la valeur réelle au moment de l'écriture (pas sur notre
-      // lecture initiale), ce qui empêche deux paiements concurrents de vider
-      // le même lot en double (double dépense).
-      const result = await tx.gatinelleLot.updateMany({
-        where: { id: lot.id, remainingCents: { gte: draw } },
-        data: { remainingCents: { decrement: draw } },
-      });
-      if (result.count === 0) {
-        throw new InsufficientBalanceError();
-      }
-      remainingToSpend -= draw;
+/**
+ * Paiement au stand en mode festival : l'acheteur est identifié par le
+ * numéro de série de son bracelet/carte NFC (pas par sa session), le
+ * destinataire est le stand authentifié. Sans PIN, plafonné par transaction
+ * (MAX_WRISTBAND_PAYMENT_CENTS) pour compenser l'absence de contrôle par code.
+ */
+export async function payMerchantByWristband(
+  standUserId: string,
+  tagUid: string,
+  amountCents: number
+) {
+  if (amountCents <= 0) {
+    throw new InvalidStateError("Le montant doit être positif.");
+  }
+  if (amountCents > MAX_WRISTBAND_PAYMENT_CENTS) {
+    throw new InvalidStateError(
+      `Le paiement par bracelet est limité à ${(MAX_WRISTBAND_PAYMENT_CENTS / 100).toFixed(2)} € par transaction.`
+    );
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const buyer = await tx.user.findUnique({
+      where: { nfcTagUid: tagUid },
+      include: { wallet: true },
+    });
+    if (!buyer?.wallet) throw new NotFoundError("Bracelet");
+
+    const stand = await tx.user.findUnique({
+      where: { id: standUserId },
+      include: { wallet: true, merchantProfile: true },
+    });
+    if (!stand?.merchantProfile?.validated) {
+      throw new NotFoundError("Stand agréé");
+    }
+    if (!stand.wallet) throw new NotFoundError("Portefeuille du stand");
+    if (buyer.id === standUserId) {
+      throw new InvalidStateError("Impossible de se payer soi-même.");
     }
 
-    if (remainingToSpend > 0) {
-      throw new InsufficientBalanceError();
-    }
-
-    const transaction = await tx.transaction.create({
-      data: {
-        type: TransactionType.PAYMENT,
-        fromUserId: buyerUserId,
-        toUserId: merchantProfile.userId,
-        amountCents,
-        status: TransactionStatus.COMPLETED,
-        validatedAt: now,
-      },
-    });
-
-    await tx.gatinelleLot.create({
-      data: {
-        walletId: merchantProfile.user.wallet.id,
-        amountCents,
-        remainingCents: amountCents,
-        acquiredAt: now,
-        expiresAt: null,
-        status: LotStatus.ACTIVE,
-        sourceTransactionId: transaction.id,
-      },
-    });
-
-    return transaction;
+    return transferGatinelles(
+      tx,
+      buyer.id,
+      buyer.wallet.id,
+      standUserId,
+      stand.wallet.id,
+      amountCents
+    );
   });
 }
 

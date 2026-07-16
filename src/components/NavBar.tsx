@@ -24,6 +24,8 @@ export function NavBar() {
       <Link href="/payer">Payer un commerçant</Link>
       <Link href="/annuaire">Annuaire</Link>
       {user.accountType === "COMMERCANT" && <Link href="/commercant">Espace commerçant</Link>}
+      {user.accountType === "COMMERCANT" && <Link href="/stand/payer">Encaisser (stand)</Link>}
+      {isStaff && <Link href="/inscription-express">Inscription express</Link>}
       {isStaff && <Link href="/admin">Administration</Link>}
     </>
   ) : null;
