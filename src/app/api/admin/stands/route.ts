@@ -68,6 +68,7 @@ export async function POST(request: Request) {
                 category,
                 merchantCode: generateMerchantCode(),
                 validated: true,
+                isEventStand: true,
                 validatedById: session.user.id,
                 validatedAt: new Date(),
               },

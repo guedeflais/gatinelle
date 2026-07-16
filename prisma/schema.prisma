@@ -93,6 +93,10 @@ model MerchantProfile {
   iban          String?
   merchantCode  String    @unique
   validated     Boolean   @default(false)
+  // Stand créé pour un événement (voir /api/admin/stands) plutôt qu'un
+  // commerçant permanent — permet de le retrouver même après modification
+  // de ses autres informations (adresse, catégorie...).
+  isEventStand  Boolean   @default(false)
   validatedById String?
   validatedBy   User?     @relation("MerchantValidatedBy", fields: [validatedById], references: [id])
   validatedAt   DateTime?

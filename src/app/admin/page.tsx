@@ -45,12 +45,9 @@ export default async function AdminPage() {
       })
     : [];
 
-  // Les stands d'événement se reconnaissent à leur adresse fixe ("Stand
-  // d'événement", voir /api/admin/stands) — permet de les lister à part sans
-  // toucher aux vrais commerçants validés dans l'annuaire.
   const activeStands = staffIsAdmin
     ? await prisma.merchantProfile.findMany({
-        where: { validated: true, address: "Stand d'événement" },
+        where: { validated: true, isEventStand: true },
         include: { user: true },
         orderBy: { createdAt: "desc" },
       })
