@@ -1,6 +1,11 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { ConnexionSwitcher } from "@/components/ConnexionSwitcher";
 
-export default function ConnexionPage() {
+export default async function ConnexionPage() {
+  const session = await auth();
+  if (session?.user) redirect("/payer");
+
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">Connexion</h1>
