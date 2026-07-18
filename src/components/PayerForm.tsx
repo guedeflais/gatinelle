@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { QrScanner } from "./QrScanner";
+import { Butterfly } from "./Butterfly";
 
 export function PayerForm() {
   const router = useRouter();
@@ -58,9 +59,12 @@ export function PayerForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex max-w-sm flex-col gap-4">
-      <p className="text-sm font-medium text-neutral-700">
-        Deux façons de payer un commerçant :
-      </p>
+      <div className="flex items-center gap-2">
+        <Butterfly flying={success !== null} />
+        <p className="text-sm font-medium text-neutral-700">
+          Deux façons de payer un commerçant :
+        </p>
+      </div>
 
       {!scannedViaQr && (
         <div className="flex flex-col gap-2">
