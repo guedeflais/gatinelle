@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { QrScanner } from "./QrScanner";
 
 export function PayerForm() {
   const router = useRouter();
@@ -10,6 +11,7 @@ export function PayerForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [scanning, setScanning] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,6 +42,18 @@ export function PayerForm() {
     router.refresh();
   }
 
+  if (scanning) {
+    return (
+      <QrScanner
+        onScan={(data) => {
+          setMerchantCode(data.trim().toUpperCase());
+          setScanning(false);
+        }}
+        onClose={() => setScanning(false)}
+      />
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="flex max-w-sm flex-col gap-4">
       <label className="flex flex-col gap-1">
@@ -52,6 +66,13 @@ export function PayerForm() {
           className="rounded border border-neutral-300 px-3 py-2 uppercase"
         />
       </label>
+      <button
+        type="button"
+        onClick={() => setScanning(true)}
+        className="self-start rounded border border-brand-700 px-4 py-2 text-brand-700 hover:bg-brand-50"
+      >
+        Scanner un QR code
+      </button>
       <label className="flex flex-col gap-1">
         Montant (en gâtinelles)
         <input
