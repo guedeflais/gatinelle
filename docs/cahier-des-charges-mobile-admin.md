@@ -1,4 +1,4 @@
-# Cahier des charges — Application Gâtinelle (web/PWA + application native iOS)
+# Cahier des charges — Application Gâtinelle (web/PWA + application native iOS et Android)
 
 ## 1. Contexte
 
@@ -12,17 +12,22 @@ production sur `gatinelle.fr` / Google Play, et couvre à elle seule l'ensemble 
 fonctionnel identifié : paiement chez les commerçants, mode festival, et administration
 par les bénévoles.
 
-**Décision actée : le web/PWA reste la plateforme de référence, complétée par une
-application mobile native pour la distribution sur l'App Store d'Apple.** Contrairement
-à Google Play, Apple accepte mal les applications qui ne sont qu'un habillage d'un site
-web (règle de revue 4.2 "Minimum Functionality") — une PWA installée depuis Safari
-fonctionne déjà très bien sur iPhone, mais ne peut pas être publiée de façon fiable sur
-l'App Store. Une vraie application native (voir section 10) est donc développée pour ce
-seul besoin, en réutilisant les API déjà construites pour la PWA — ce n'est pas un
-retour à l'hypothèse Bolt/Expo initialement envisagée puis écartée, mais un
-développement direct, sans générateur de code automatisé.
+**Décision actée : une application mobile native unique, publiée à la fois sur l'App
+Store et sur Google Play**, le web/PWA restant la plateforme de référence pour
+l'administration et pour l'accès sans installation. Contrairement à Google Play, Apple
+accepte mal les applications qui ne sont qu'un habillage d'un site web (règle de revue
+4.2 "Minimum Functionality") — une PWA installée depuis Safari fonctionne déjà très
+bien sur iPhone, mais ne peut pas être publiée de façon fiable sur l'App Store. Une
+vraie application native (React Native/Expo, voir section 10) est donc développée pour
+les particuliers et commerçants, en réutilisant les API déjà construites pour la PWA ;
+une fois écrite pour iOS, la même base de code produit aussi la version Android (React
+Native étant multi-plateforme par nature), qui remplacera à terme le TWA actuel sur la
+fiche Google Play existante. Ce n'est pas un retour à l'hypothèse Bolt/Expo initialement
+envisagée puis écartée, mais un développement direct, sans générateur de code
+automatisé.
 
-Ce document spécifie les fonctionnalités communes aux deux plateformes, à destination :
+Ce document spécifie les fonctionnalités communes au web/PWA et à l'application
+native, à destination :
 - des **particuliers et commerçants** (achat, paiement, reconversion, mode festival) ;
 - des **bénévoles et responsables de l'association** (administration — reste sur le web
   uniquement, voir section 10).
@@ -283,7 +288,7 @@ application (pas une application séparée) :
   test/développement strictement séparé de la production (aucune donnée réelle
   d'adhérent ne doit jamais être exposée à un test).
 
-## 10. Choix technique : web/PWA de référence + application native pour l'App Store
+## 10. Choix technique : web/PWA pour l'administration + application native pour particuliers et commerçants
 
 ### 10.1 Le web/PWA reste la plateforme de référence
 
@@ -303,7 +308,7 @@ un :
 C'est pour cette raison que l'hypothèse initiale d'un développement natif via
 Bolt/Expo avait été écartée : elle n'était pas justifiée par le besoin fonctionnel.
 
-### 10.2 Une application native, développée spécifiquement pour l'App Store
+### 10.2 Une application native, pour particuliers et commerçants (App Store + Google Play)
 
 Le web/PWA reste pleinement fonctionnel sur iPhone (installation depuis Safari, "Ajouter
 à l'écran d'accueil"), mais **ne peut pas être publié de façon fiable sur l'App Store**
@@ -313,34 +318,36 @@ Functionality"), un risque encore plus élevé pour une application à caractèr
 financier.
 
 Décision : développer une **véritable application native (React Native / Expo)**,
-avec ses propres écrans (pas un simple habillage du site), pour ce seul besoin de
-distribution Apple :
+avec ses propres écrans (pas un simple habillage du site) :
 - Développement direct (pas via Bolt ni aucun autre générateur de code automatisé),
   s'appuyant sur les API déjà construites côté serveur pour la PWA (`/api/register`,
   `/api/payments`, etc.) — pas de nouvelle logique métier, une nouvelle couche d'écrans.
+- **Une seule base de code pour les deux stores** : React Native étant multi-plateforme
+  par nature, produire la version Android à partir du même projet, une fois la version
+  iOS écrite, est une étape marginale (`eas build --platform android`), pas un second
+  développement — évite de maintenir deux fronts différents (web et natif) avec la même
+  logique dupliquée à chaque évolution future.
 - Test en cours de développement via Expo Go (scan d'un QR code depuis un téléphone),
   sans nécessiter de Mac.
-- Compilation du binaire final et signature via **EAS Build** (service cloud d'Expo),
-  également sans Mac local nécessaire.
+- Compilation des binaires finaux et signature via **EAS Build** (service cloud
+  d'Expo), pour les deux plateformes, sans Mac local nécessaire.
 - Un **compte développeur Apple payant (99 $/an)** est requis, à créer et gérer par
-  l'association elle-même (démarche non déléguée à un tiers).
+  l'association elle-même (démarche non déléguée à un tiers) ; le compte développeur
+  Google Play existe déjà.
 - L'acceptation par Apple n'est jamais garantie à 100 %, mais une vraie application
   native a des chances nettement meilleures qu'un PWA habillé.
-- Périmètre initial : les écrans côté **particuliers et commerçants** (section 5).
+- Périmètre : les écrans côté **particuliers et commerçants** (section 5) uniquement.
   L'administration (section 6) reste sur le web uniquement — c'est un usage bénévole,
-  ponctuel, sans besoin d'être dans l'App Store.
+  ponctuel, sans besoin d'être dans un store.
+- **Sur Google Play**, l'application native remplacera à terme le TWA actuel sur la
+  **même fiche existante** (mise à jour normale du même `applicationId`, pas une
+  nouvelle fiche à créer) — à faire une fois l'application native testée et stable sur
+  Android, pas en même temps que le développement iOS initial.
 - Ampleur à anticiper : refaire chaque écran existant en natif est un chantier
   conséquent, pas un ajout rapide.
 
-Ce choix évite néanmoins tout ce qui aurait été nécessaire pour un native généralisé à
-Android également (deux chaînes de publication complètes, deux bases de code natives) :
-Android continue de passer par le web/PWA (TWA, déjà en production sur Google Play),
-seul iOS a besoin d'un vrai natif.
-
 ## 11. Hors périmètre
 
-- Application native Android : le web/PWA (TWA) couvre déjà ce besoin, voir 10.1 — pas
-  de développement natif Android à prévoir.
 - Administration en natif : reste sur le web uniquement (usage bénévole, voir 10.2).
 - Résilience hors-ligne complète du mode festival.
 - Import en masse des adhérents/commerçants existants (besoin confirmé, spécification
