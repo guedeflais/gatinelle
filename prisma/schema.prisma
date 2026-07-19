@@ -105,6 +105,21 @@ model MerchantProfile {
   validatedBy   User?     @relation("MerchantValidatedBy", fields: [validatedById], references: [id])
   validatedAt   DateTime?
   createdAt     DateTime  @default(now())
+
+  standProducts StandProduct[]
+}
+
+// Catalogue de produits d'un stand (mode festival) : permet d'encaisser en un
+// clic (voir StandPaymentForm) plutôt que de taper un montant à la main.
+model StandProduct {
+  id                String          @id @default(cuid())
+  merchantProfileId String
+  merchantProfile   MerchantProfile @relation(fields: [merchantProfileId], references: [id], onDelete: Cascade)
+  name              String
+  priceCents        Int
+  createdAt         DateTime        @default(now())
+
+  @@index([merchantProfileId])
 }
 
 model Wallet {

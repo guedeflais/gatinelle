@@ -6,6 +6,7 @@ import { getCirculationStats } from "@/lib/wallet";
 import { formatGatinelles } from "@/lib/money";
 import { ActionButton } from "@/components/ActionButton";
 import { StandCreateForm } from "@/components/StandCreateForm";
+import { StandProductForm } from "@/components/StandProductForm";
 
 const METHOD_LABELS: Record<string, string> = {
   CASH: "Espèces",
@@ -48,7 +49,7 @@ export default async function AdminPage() {
   const activeStands = staffIsAdmin
     ? await prisma.merchantProfile.findMany({
         where: { validated: true, isEventStand: true },
-        include: { user: true },
+        include: { user: true, standProducts: { orderBy: { createdAt: "asc" } } },
         orderBy: { createdAt: "desc" },
       })
     : [];
@@ -233,36 +234,52 @@ export default async function AdminPage() {
           <StandCreateForm />
 
           {activeStands.length > 0 && (
-            <div className="mt-6">
-              <h3 className="mb-2 text-sm font-medium text-neutral-700">
+            <div className="mt-6 flex flex-col gap-4">
+              <h3 className="text-sm font-medium text-neutral-700">
                 Stands actifs (retirer après l&apos;événement)
               </h3>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-neutral-500">
-                    <th className="py-2">Stand</th>
-                    <th>Catégorie</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeStands.map((m) => (
-                    <tr key={m.id} className="border-b border-neutral-100">
-                      <td className="py-2">{m.businessName}</td>
-                      <td>{m.category}</td>
-                      <td>
-                        <ActionButton
-                          url="/api/admin/merchants/validate"
-                          body={{ merchantProfileId: m.id, approve: false }}
-                          label="Retirer"
-                          confirmMessage="Retirer ce stand de l'annuaire ? L'historique de ses transactions reste conservé."
-                          className="rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {activeStands.map((m) => (
+                <div key={m.id} className="rounded border border-neutral-200 p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-medium">{m.businessName}</p>
+                      <p className="text-sm text-neutral-500">{m.category}</p>
+                    </div>
+                    <ActionButton
+                      url="/api/admin/merchants/validate"
+                      body={{ merchantProfileId: m.id, approve: false }}
+                      label="Retirer"
+                      confirmMessage="Retirer ce stand de l'annuaire ? L'historique de ses transactions reste conservé."
+                      className="rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
+                    />
+                  </div>
+
+                  <div className="mt-4">
+                    <p className="mb-2 text-sm font-medium text-neutral-700">
+                      Catalogue de produits
+                    </p>
+                    {m.standProducts.length > 0 && (
+                      <ul className="mb-3 flex flex-col gap-1">
+                        {m.standProducts.map((p) => (
+                          <li key={p.id} className="flex items-center gap-3 text-sm">
+                            <span className="flex-1">{p.name}</span>
+                            <span className="text-neutral-500">
+                              {formatGatinelles(p.priceCents)}
+                            </span>
+                            <ActionButton
+                              url="/api/admin/stand-products/delete"
+                              body={{ productId: p.id }}
+                              label="Supprimer"
+                              className="rounded border border-neutral-300 px-2 py-0.5 text-xs text-neutral-600 hover:bg-neutral-50"
+                            />
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <StandProductForm merchantProfileId={m.id} />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </section>

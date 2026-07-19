@@ -2,8 +2,15 @@
 
 import { useState } from "react";
 import { isNfcSupported, scanNfcTag } from "@/lib/nfc";
+import { formatGatinelles } from "@/lib/money";
 
-export function StandPaymentForm() {
+interface StandProductOption {
+  id: string;
+  name: string;
+  priceCents: number;
+}
+
+export function StandPaymentForm({ products = [] }: { products?: StandProductOption[] }) {
   const [amount, setAmount] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -58,6 +65,23 @@ export function StandPaymentForm() {
 
   return (
     <div className="flex max-w-sm flex-col gap-3">
+      {products.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <span className="text-sm text-neutral-700">Produits</span>
+          <div className="flex flex-wrap gap-2">
+            {products.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setAmount((p.priceCents / 100).toString())}
+                className="rounded border border-brand-700 px-3 py-1.5 text-sm text-brand-700 hover:bg-brand-50"
+              >
+                {p.name} — {formatGatinelles(p.priceCents)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <label className="flex flex-col gap-1">
         Montant (en euros)
         <input
