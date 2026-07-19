@@ -16,12 +16,13 @@ const PALETTE = {
 /**
  * Papillon du logo Gâtinelle, en SVG (pas une image fixe) pour pouvoir
  * l'animer : battement d'ailes discret au repos, envol quand un paiement
- * est validé (voir PayerForm).
+ * est validé (voir PayerForm). Ailes en forme d'aile (pointues près du
+ * corps, arrondies à l'extérieur), pas des ovales.
  */
 export function Butterfly({ flying, light = false }: ButterflyProps) {
   const palette = light ? PALETTE.light : PALETTE.brand;
-  const primaryOpacity = light ? 0.85 : 1;
-  const secondaryOpacity = light ? 0.55 : 1;
+  const primaryOpacity = light ? 0.9 : 1;
+  const secondaryOpacity = light ? 0.6 : 1;
   const darkOpacity = light ? 0.95 : 1;
 
   return (
@@ -30,62 +31,30 @@ export function Butterfly({ flying, light = false }: ButterflyProps) {
       aria-hidden="true"
     >
       <svg
-        width="40"
-        height="40"
-        viewBox="0 0 40 40"
+        width="56"
+        height="56"
+        viewBox="0 0 56 56"
         className={flying ? "butterfly-flutter-fast" : "butterfly-flutter"}
       >
-        <g style={{ transformOrigin: "20px 18px" }} className="butterfly-wing-left">
-          <ellipse
-            cx="10"
-            cy="14"
-            rx="9"
-            ry="10"
-            transform="rotate(-20 10 14)"
-            fill={palette.primary}
-            fillOpacity={primaryOpacity}
-          />
-          <ellipse
-            cx="12"
-            cy="26"
-            rx="6.5"
-            ry="7.5"
-            transform="rotate(-10 12 26)"
-            fill={palette.secondary}
-            fillOpacity={secondaryOpacity}
-          />
+        <g style={{ transformOrigin: "28px 20px" }} className="butterfly-wing-left">
+          <path d="M28,17 Q16,2 2,14 Q5,26 28,19 Z" fill={palette.primary} fillOpacity={primaryOpacity} />
+          <path d="M28,22 Q21,26 16,36 Q24,41 28,30 Z" fill={palette.secondary} fillOpacity={secondaryOpacity} />
         </g>
-        <g style={{ transformOrigin: "20px 18px" }} className="butterfly-wing-right">
-          <ellipse
-            cx="30"
-            cy="14"
-            rx="9"
-            ry="10"
-            transform="rotate(20 30 14)"
-            fill={palette.primary}
-            fillOpacity={primaryOpacity}
-          />
-          <ellipse
-            cx="28"
-            cy="26"
-            rx="6.5"
-            ry="7.5"
-            transform="rotate(10 28 26)"
-            fill={palette.secondary}
-            fillOpacity={secondaryOpacity}
-          />
+        <g style={{ transformOrigin: "28px 20px" }} className="butterfly-wing-right">
+          <path d="M28,17 Q40,2 54,14 Q51,26 28,19 Z" fill={palette.primary} fillOpacity={primaryOpacity} />
+          <path d="M28,22 Q35,26 40,36 Q32,41 28,30 Z" fill={palette.secondary} fillOpacity={secondaryOpacity} />
         </g>
-        <ellipse cx="20" cy="20" rx="1.5" ry="10" fill={palette.dark} fillOpacity={darkOpacity} />
+        <ellipse cx="28" cy="28" rx="2" ry="15" fill={palette.dark} fillOpacity={darkOpacity} />
         <path
-          d="M20 12 C17.5 8.5, 15.5 6.5, 14 5 M20 12 C22.5 8.5, 24.5 6.5, 26 5"
+          d="M28 15 C24 8, 20 4, 16 2 M28 15 C32 8, 36 4, 40 2"
           stroke={palette.dark}
           strokeOpacity={darkOpacity}
-          strokeWidth="1"
+          strokeWidth="1.6"
           fill="none"
           strokeLinecap="round"
         />
-        <circle cx="14" cy="5" r="0.9" fill={palette.dark} fillOpacity={darkOpacity} />
-        <circle cx="26" cy="5" r="0.9" fill={palette.dark} fillOpacity={darkOpacity} />
+        <circle cx="16" cy="2" r="1.4" fill={palette.dark} fillOpacity={darkOpacity} />
+        <circle cx="40" cy="2" r="1.4" fill={palette.dark} fillOpacity={darkOpacity} />
       </svg>
 
       <style jsx>{`
