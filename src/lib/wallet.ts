@@ -36,7 +36,7 @@ const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 
 // Mode festival : sans PIN pour payer, le seul rempart est un plafond par
 // transaction (comme le sans-contact bancaire), pas un contrôle par code.
-export const MAX_WRISTBAND_PAYMENT_CENTS = 2000;
+export const MAX_WRISTBAND_PAYMENT_CENTS = 5000;
 
 /** Solde actif d'un portefeuille : somme des lots ACTIFS et non expirés. */
 export async function getBalanceCents(db: Db, walletId: string): Promise<number> {
