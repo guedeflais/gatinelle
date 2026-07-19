@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { generateMerchantCode } from "@/lib/merchantCode";
 import { generateMemberNumber } from "@/lib/memberNumber";
 import { PIN_REGEX } from "@/lib/pin";
+import { geocodeAddress } from "@/lib/geocoding";
 
 const schema = z.object({
   fullName: z.string().min(2),
@@ -44,6 +45,9 @@ export async function POST(request: Request) {
 
   const passwordHash = await bcrypt.hash(data.password, 12);
   const pinHash = await bcrypt.hash(data.pin, 10);
+  // Géocodage en amont (best-effort, jamais bloquant) : un appel réseau ne
+  // doit pas rester ouvert pendant la transaction ci-dessous.
+  const coordinates = data.merchant ? await geocodeAddress(data.merchant.address) : null;
 
   try {
     const user = await prisma.$transaction(async (tx) => {
@@ -81,6 +85,8 @@ export async function POST(request: Request) {
                 userId: created.id,
                 businessName: data.merchant.businessName,
                 address: data.merchant.address,
+                latitude: coordinates?.latitude,
+                longitude: coordinates?.longitude,
                 category: data.merchant.category,
                 iban: data.merchant.iban,
                 merchantCode: generateMerchantCode(),

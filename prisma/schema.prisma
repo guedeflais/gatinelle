@@ -84,6 +84,10 @@ model MerchantProfile {
   user          User      @relation(fields: [userId], references: [id])
   businessName  String
   address       String
+  // Géocodées côté serveur à partir de `address` (voir src/lib/geocoding.ts) ;
+  // null si l'adresse n'a pas pu être géolocalisée.
+  latitude      Float?
+  longitude     Float?
   category      String
   iban          String?
   merchantCode  String    @unique

@@ -1,0 +1,2 @@
+ALTER TABLE "MerchantProfile" ADD COLUMN "latitude" DOUBLE PRECISION;
+ALTER TABLE "MerchantProfile" ADD COLUMN "longitude" DOUBLE PRECISION;
