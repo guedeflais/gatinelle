@@ -1,13 +1,7 @@
-import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-
-// Chargée sans SSR : Leaflet a besoin du DOM du navigateur (window/document).
-const MerchantMap = dynamic(() => import("@/components/MerchantMap").then((m) => m.MerchantMap), {
-  ssr: false,
-  loading: () => <div className="h-[420px] w-full animate-pulse rounded-xl bg-neutral-100" />,
-});
+import { MerchantMapLoader } from "@/components/MerchantMapLoader";
 
 export default async function AnnuairePage() {
   const session = await auth();
@@ -32,7 +26,7 @@ export default async function AnnuairePage() {
         <p className="text-neutral-500">Aucun commerçant agréé pour l&apos;instant.</p>
       ) : (
         <>
-          {located.length > 0 && <MerchantMap merchants={located} />}
+          {located.length > 0 && <MerchantMapLoader merchants={located} />}
           {unlocated.length > 0 && (
             <div>
               <p className="mb-2 text-sm text-neutral-500">
