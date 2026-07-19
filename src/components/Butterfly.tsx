@@ -37,24 +37,40 @@ export function Butterfly({ flying, light = false }: ButterflyProps) {
         className={flying ? "butterfly-flutter-fast" : "butterfly-flutter"}
       >
         <g style={{ transformOrigin: "28px 20px" }} className="butterfly-wing-left">
-          <path d="M28,17 Q16,2 2,14 Q5,26 28,19 Z" fill={palette.primary} fillOpacity={primaryOpacity} />
-          <path d="M28,22 Q21,26 16,36 Q24,41 28,30 Z" fill={palette.secondary} fillOpacity={secondaryOpacity} />
+          <path
+            d="M28,18 Q13.37,19.72 8,6 Q22.63,4.28 28,18 Z"
+            fill={palette.primary}
+            fillOpacity={primaryOpacity}
+          />
+          <path
+            d="M28,24 Q25.24,35.24 14,38 Q16.76,26.76 28,24 Z"
+            fill={palette.secondary}
+            fillOpacity={secondaryOpacity}
+          />
         </g>
         <g style={{ transformOrigin: "28px 20px" }} className="butterfly-wing-right">
-          <path d="M28,17 Q40,2 54,14 Q51,26 28,19 Z" fill={palette.primary} fillOpacity={primaryOpacity} />
-          <path d="M28,22 Q35,26 40,36 Q32,41 28,30 Z" fill={palette.secondary} fillOpacity={secondaryOpacity} />
+          <path
+            d="M28,18 Q42.63,19.72 48,6 Q33.37,4.28 28,18 Z"
+            fill={palette.primary}
+            fillOpacity={primaryOpacity}
+          />
+          <path
+            d="M28,24 Q30.76,35.24 42,38 Q39.24,26.76 28,24 Z"
+            fill={palette.secondary}
+            fillOpacity={secondaryOpacity}
+          />
         </g>
         <ellipse cx="28" cy="28" rx="2" ry="15" fill={palette.dark} fillOpacity={darkOpacity} />
         <path
-          d="M28 15 C24 8, 20 4, 16 2 M28 15 C32 8, 36 4, 40 2"
+          d="M28 14 C24 7, 20 3, 16 1 M28 14 C32 7, 36 3, 40 1"
           stroke={palette.dark}
           strokeOpacity={darkOpacity}
-          strokeWidth="1.6"
+          strokeWidth="2"
           fill="none"
           strokeLinecap="round"
         />
-        <circle cx="16" cy="2" r="1.4" fill={palette.dark} fillOpacity={darkOpacity} />
-        <circle cx="40" cy="2" r="1.4" fill={palette.dark} fillOpacity={darkOpacity} />
+        <circle cx="16" cy="1" r="1.6" fill={palette.dark} fillOpacity={darkOpacity} />
+        <circle cx="40" cy="1" r="1.6" fill={palette.dark} fillOpacity={darkOpacity} />
       </svg>
 
       <style jsx>{`
