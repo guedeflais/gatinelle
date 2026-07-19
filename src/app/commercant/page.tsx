@@ -98,6 +98,10 @@ export default async function CommercantPage() {
           Une fois la demande envoyée, l&apos;association effectue le virement bancaire puis
           valide la demande. Le montant demandé sort immédiatement de votre solde disponible.
         </p>
+        <p className="max-w-md text-sm text-neutral-600">
+          Commission fixe de 0.50 G, plus commission variable de 0.1% du montant reconverti.
+          Optez de préférence pour une utilisation de vos gâtinelles chez un autre commerçant.
+        </p>
         <ConversionForm />
 
         <table className="w-full text-sm">
