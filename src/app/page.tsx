@@ -1,8 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { Butterfly } from "@/components/Butterfly";
 
 export default async function Home() {
   const session = await auth();
@@ -10,39 +10,40 @@ export default async function Home() {
   if (!session?.user && !seenOnboarding) redirect("/bienvenue");
 
   return (
-    <div className="flex flex-col gap-6">
-      <Image
-        src="/gatinelle-logo.png"
-        alt="La Gâtinelle — monnaie locale"
-        width={267}
-        height={126}
-        priority
-      />
-      <h1 className="sr-only">La Gâtinelle</h1>
-      <p className="max-w-xl text-neutral-700">
-        La monnaie locale complémentaire de la Gâtine Poitevine.
-        <br />
-        Achetez des gâtinelles, payez chez les commerçants agréés, et suivez
-        votre compte en un coup d&apos;œil.
-      </p>
-      <div className="flex flex-wrap gap-4">
-        <Link
-          href="/connexion"
-          className="rounded bg-brand-700 px-4 py-2 text-white hover:bg-brand-800"
-        >
-          Se connecter
-        </Link>
-        <Link
-          href="/inscription"
-          className="rounded border border-brand-700 px-4 py-2 text-brand-700 hover:bg-brand-50"
-        >
-          Créer un compte
-        </Link>
+    <div className="flex min-h-[70vh] flex-col items-center justify-center gap-6 rounded-2xl bg-gradient-to-br from-brand-700 to-leaf-700 px-6 py-16 text-center text-white">
+      <Butterfly flying={false} />
+      <div>
+        <h1 className="text-3xl font-semibold">
+          Bienvenue sur
+          <br />
+          La Gâtinelle
+        </h1>
+        <p className="mt-3 max-w-xs text-brand-100">
+          La monnaie locale numérique de la Gâtine Poitevine
+        </p>
+      </div>
+      <div className="flex w-full max-w-sm flex-col gap-3">
+        {!session?.user && (
+          <>
+            <Link
+              href="/connexion"
+              className="rounded-full bg-white px-6 py-3 font-medium text-brand-700"
+            >
+              Se connecter
+            </Link>
+            <Link
+              href="/inscription"
+              className="rounded-full border border-white px-6 py-3 font-medium text-white"
+            >
+              Créer un compte
+            </Link>
+          </>
+        )}
         <Link
           href="/annuaire"
-          className="rounded border border-neutral-300 px-4 py-2 text-neutral-700 hover:bg-neutral-50"
+          className="rounded-full border border-white px-6 py-3 font-medium text-white"
         >
-          Voir l&apos;annuaire des commerçants
+          Annuaire des commerçants
         </Link>
       </div>
     </div>
