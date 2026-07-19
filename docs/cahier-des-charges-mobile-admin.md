@@ -1,4 +1,4 @@
-# Cahier des charges — Application Gâtinelle (PWA)
+# Cahier des charges — Application Gâtinelle (web/PWA + application native iOS)
 
 ## 1. Contexte
 
@@ -9,18 +9,23 @@ territoire.
 
 Une application web (responsive, installable comme PWA sur Android et iOS) est déjà en
 production sur `gatinelle.fr` / Google Play, et couvre à elle seule l'ensemble du besoin
-identifié : paiement chez les commerçants, mode festival, et administration par les
-bénévoles.
+fonctionnel identifié : paiement chez les commerçants, mode festival, et administration
+par les bénévoles.
 
-**Décision actée : pas d'application mobile native séparée.** L'hypothèse initialement
-envisagée d'un développement natif (via Bolt/Expo) est abandonnée — la solution PWA
-actuelle répond en tous points aux besoins retenus (voir section 3 et section 10), sans
-les coûts et contraintes d'un développement natif (comptes développeur séparés, revues
-de store distinctes, chaîne de compilation dédiée).
+**Décision actée : le web/PWA reste la plateforme de référence, complétée par une
+application mobile native pour la distribution sur l'App Store d'Apple.** Contrairement
+à Google Play, Apple accepte mal les applications qui ne sont qu'un habillage d'un site
+web (règle de revue 4.2 "Minimum Functionality") — une PWA installée depuis Safari
+fonctionne déjà très bien sur iPhone, mais ne peut pas être publiée de façon fiable sur
+l'App Store. Une vraie application native (voir section 10) est donc développée pour ce
+seul besoin, en réutilisant les API déjà construites pour la PWA — ce n'est pas un
+retour à l'hypothèse Bolt/Expo initialement envisagée puis écartée, mais un
+développement direct, sans générateur de code automatisé.
 
-Ce document spécifie les fonctionnalités de cette application unique, à destination :
+Ce document spécifie les fonctionnalités communes aux deux plateformes, à destination :
 - des **particuliers et commerçants** (achat, paiement, reconversion, mode festival) ;
-- des **bénévoles et responsables de l'association** (administration).
+- des **bénévoles et responsables de l'association** (administration — reste sur le web
+  uniquement, voir section 10).
 
 ## 2. Objectifs
 
@@ -278,11 +283,13 @@ application (pas une application séparée) :
   test/développement strictement séparé de la production (aucune donnée réelle
   d'adhérent ne doit jamais être exposée à un test).
 
-## 10. Choix technique : PWA plutôt qu'application native
+## 10. Choix technique : web/PWA de référence + application native pour l'App Store
 
-Le développement d'une application mobile native (envisagé initialement via Bolt/Expo)
-est abandonné : la PWA actuelle satisfait déjà, sans code natif, les deux besoins qui
-auraient pu sembler le justifier :
+### 10.1 Le web/PWA reste la plateforme de référence
+
+Sur le fond fonctionnel, aucun développement natif n'est nécessaire : la PWA actuelle
+satisfait déjà, sans code natif, les deux besoins qui auraient pu sembler en justifier
+un :
 
 - **Paiement par QR code ou code commerçant** (phase 1) : ne demande aucune API native,
   fonctionne dans n'importe quel navigateur moderne (voir 5.4).
@@ -290,18 +297,51 @@ auraient pu sembler le justifier :
   NFC (`NDEFReader`), disponible dans Chrome sur Android — précisément la seule
   plateforme utilisée pour ce mode, puisque les téléphones des stands sont fournis et
   contrôlés par l'association (voir 5.7). L'absence de support Web NFC sur iPhone n'est
-  donc pas une contrainte à contourner : elle est hors sujet, le besoin exprimé se
-  limitant explicitement aux téléphones Android.
+  donc pas une contrainte à contourner ici : le besoin exprimé se limite explicitement
+  aux téléphones Android pour ce mode.
 
-Ce choix évite la gestion de deux chaînes de publication (App Store + Play Store), un
-compte développeur Apple payant, une chaîne de compilation native (EAS Build) et une
-revue Apple plus stricte pour une application à caractère financier — sans aucune perte
-fonctionnelle au regard des besoins retenus.
+C'est pour cette raison que l'hypothèse initiale d'un développement natif via
+Bolt/Expo avait été écartée : elle n'était pas justifiée par le besoin fonctionnel.
+
+### 10.2 Une application native, développée spécifiquement pour l'App Store
+
+Le web/PWA reste pleinement fonctionnel sur iPhone (installation depuis Safari, "Ajouter
+à l'écran d'accueil"), mais **ne peut pas être publié de façon fiable sur l'App Store**
+lui-même : Apple rejette régulièrement les applications qui ne sont qu'un habillage
+d'un site web sans fonctionnalité native ajoutée (règle de revue 4.2 "Minimum
+Functionality"), un risque encore plus élevé pour une application à caractère
+financier.
+
+Décision : développer une **véritable application native (React Native / Expo)**,
+avec ses propres écrans (pas un simple habillage du site), pour ce seul besoin de
+distribution Apple :
+- Développement direct (pas via Bolt ni aucun autre générateur de code automatisé),
+  s'appuyant sur les API déjà construites côté serveur pour la PWA (`/api/register`,
+  `/api/payments`, etc.) — pas de nouvelle logique métier, une nouvelle couche d'écrans.
+- Test en cours de développement via Expo Go (scan d'un QR code depuis un téléphone),
+  sans nécessiter de Mac.
+- Compilation du binaire final et signature via **EAS Build** (service cloud d'Expo),
+  également sans Mac local nécessaire.
+- Un **compte développeur Apple payant (99 $/an)** est requis, à créer et gérer par
+  l'association elle-même (démarche non déléguée à un tiers).
+- L'acceptation par Apple n'est jamais garantie à 100 %, mais une vraie application
+  native a des chances nettement meilleures qu'un PWA habillé.
+- Périmètre initial : les écrans côté **particuliers et commerçants** (section 5).
+  L'administration (section 6) reste sur le web uniquement — c'est un usage bénévole,
+  ponctuel, sans besoin d'être dans l'App Store.
+- Ampleur à anticiper : refaire chaque écran existant en natif est un chantier
+  conséquent, pas un ajout rapide.
+
+Ce choix évite néanmoins tout ce qui aurait été nécessaire pour un native généralisé à
+Android également (deux chaînes de publication complètes, deux bases de code natives) :
+Android continue de passer par le web/PWA (TWA, déjà en production sur Google Play),
+seul iOS a besoin d'un vrai natif.
 
 ## 11. Hors périmètre
 
-- Application mobile native (iOS/Android) : abandonnée (voir section 10) — la PWA
-  couvre l'ensemble des besoins retenus.
+- Application native Android : le web/PWA (TWA) couvre déjà ce besoin, voir 10.1 — pas
+  de développement natif Android à prévoir.
+- Administration en natif : reste sur le web uniquement (usage bénévole, voir 10.2).
 - Résilience hors-ligne complète du mode festival.
 - Import en masse des adhérents/commerçants existants (besoin confirmé, spécification
   détaillée à faire séparément une fois le fichier source disponible).
