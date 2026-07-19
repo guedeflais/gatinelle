@@ -1,7 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 
-export default function Home() {
+export default async function Home() {
+  const session = await auth();
+  const seenOnboarding = (await cookies()).get("gatinelle_onboarding_seen");
+  if (!session?.user && !seenOnboarding) redirect("/bienvenue");
+
   return (
     <div className="flex flex-col gap-6">
       <Image

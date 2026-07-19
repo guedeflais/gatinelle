@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { SignOutButton } from "./SignOutButton";
 
 export function NavBar() {
   const { data: session } = useSession();
@@ -19,21 +20,20 @@ export function NavBar() {
 
   const links = user ? (
     <>
-      <Link href="/compte">Mon compte</Link>
+      <Link href="/compte">Portefeuille</Link>
       <Link href="/acheter">Acheter</Link>
       <Link href="/payer">Payer un commerçant</Link>
       <Link href="/annuaire">Annuaire</Link>
       {user.accountType === "COMMERCANT" && <Link href="/commercant">Espace commerçant</Link>}
       {isStaff && <Link href="/admin">Administration</Link>}
+      <Link href="/compte/profil">Mon compte</Link>
     </>
   ) : null;
 
   const authLinks = user ? (
     <>
       <span className="text-neutral-500">{user.fullName}</span>
-      <button onClick={() => signOut({ callbackUrl: "/" })} className="text-left text-brand-700">
-        Déconnexion
-      </button>
+      <SignOutButton className="text-left text-brand-700" />
     </>
   ) : (
     <>
