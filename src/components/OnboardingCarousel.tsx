@@ -9,7 +9,7 @@ const ONBOARDING_COOKIE = "gatinelle_onboarding_seen=1; path=/; max-age=31536000
 
 const SLIDES = [
   {
-    icon: <Butterfly flying={false} light />,
+    icon: <Butterfly flying={false} />,
     heading: (
       <>
         Bienvenue sur

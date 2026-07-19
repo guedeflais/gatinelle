@@ -2,101 +2,39 @@
 
 interface ButterflyProps {
   flying: boolean;
-  // Variante claire (blanc translucide) pour les fonds en dégradé bleu/vert
-  // (écran de bienvenue, page d'accueil) ; variante par défaut (bleu marque)
-  // pour les fonds clairs (ex. formulaire de paiement).
-  light?: boolean;
 }
 
-const PALETTE = {
-  brand: { primary: "#4F8FC0", secondary: "#9CC3E0", dark: "#3d7098" },
-  light: { primary: "#FFFFFF", secondary: "#FFFFFF", dark: "#FFFFFF" },
-};
-
 /**
- * Papillon en SVG (pas une image fixe) pour pouvoir l'animer : battement
- * d'ailes discret au repos, envol quand un paiement est validé (voir
- * PayerForm). Forme calquée sur l'image de référence transmise par
- * l'utilisateur : ailes en amande (pointues près du corps, arrondies à
- * l'extérieur), antennes bien visibles avec leurs points au bout.
+ * Papillon repris de l'image fournie par l'utilisateur (public/papillon.png,
+ * ailes détourées) : le corps et les antennes sont redessinés en SVG et
+ * superposés à l'image, car ils ont la même couleur que le fond d'origine et
+ * ne pouvaient pas être détourés automatiquement. Étant une image, les ailes
+ * ne peuvent pas battre indépendamment (pas de flutter au repos) — seul
+ * l'envol au succès d'un paiement (translation/rotation/fondu sur
+ * l'ensemble) est animé, voir PayerForm.
  */
-export function Butterfly({ flying, light = false }: ButterflyProps) {
-  const palette = light ? PALETTE.light : PALETTE.brand;
-  const primaryOpacity = light ? 0.95 : 1;
-  const secondaryOpacity = light ? 0.7 : 1;
-  const darkOpacity = light ? 1 : 1;
-
+export function Butterfly({ flying }: ButterflyProps) {
   return (
     <div
       className={`pointer-events-none inline-block ${flying ? "butterfly-fly" : ""}`}
       aria-hidden="true"
     >
-      <svg
-        width="64"
-        height="64"
-        viewBox="0 0 100 100"
-        className={flying ? "butterfly-flutter-fast" : "butterfly-flutter"}
-      >
-        <g style={{ transformOrigin: "50px 40px" }} className="butterfly-wing-left">
-          <path
-            d="M48,36 Q26.20,45.30 10,28 Q31.80,18.70 48,36 Z"
-            fill={palette.primary}
-            fillOpacity={primaryOpacity}
-          />
-          <path
-            d="M49,50 Q40.10,70.29 18,72 Q26.90,51.71 49,50 Z"
-            fill={palette.secondary}
-            fillOpacity={secondaryOpacity}
-          />
-        </g>
-        <g style={{ transformOrigin: "50px 40px" }} className="butterfly-wing-right">
-          <path
-            d="M52,36 Q73.80,45.30 90,28 Q68.20,18.70 52,36 Z"
-            fill={palette.primary}
-            fillOpacity={primaryOpacity}
-          />
-          <path
-            d="M51,50 Q59.90,70.29 82,72 Q73.10,51.71 51,50 Z"
-            fill={palette.secondary}
-            fillOpacity={secondaryOpacity}
-          />
-        </g>
+      <svg width="100" height="61" viewBox="0 0 480 293" xmlns="http://www.w3.org/2000/svg">
+        <image href="/papillon.png" x="0" y="0" width="480" height="293" />
+        <path d="M223,130 Q230,200 240,255 Q250,200 257,130 Z" fill="#FFFFFF" />
+        <ellipse cx="240" cy="113" rx="39" ry="17" fill="#FFFFFF" />
         <path
-          d="M50,33 C54,38 54,55 50,66 C46,55 46,38 50,33 Z"
-          fill={palette.dark}
-          fillOpacity={darkOpacity}
-        />
-        <circle cx="50" cy="30" r="3.5" fill={palette.dark} fillOpacity={darkOpacity} />
-        <path
-          d="M48,29 C40,20 34,16 30,15 M52,29 C60,20 66,16 70,15"
-          stroke={palette.dark}
-          strokeOpacity={darkOpacity}
-          strokeWidth="2"
+          d="M225,100 Q195,50 180,10 M255,100 Q285,50 298,10"
+          stroke="#FFFFFF"
+          strokeWidth="6"
           fill="none"
           strokeLinecap="round"
         />
-        <circle cx="30" cy="15" r="2.4" fill={palette.dark} fillOpacity={darkOpacity} />
-        <circle cx="70" cy="15" r="2.4" fill={palette.dark} fillOpacity={darkOpacity} />
+        <circle cx="178" cy="3" r="12" fill="#FFFFFF" />
+        <circle cx="300" cy="3" r="12" fill="#FFFFFF" />
       </svg>
 
       <style jsx>{`
-        .butterfly-flutter .butterfly-wing-left,
-        .butterfly-flutter .butterfly-wing-right {
-          animation: butterfly-flap 1.1s ease-in-out infinite;
-        }
-        .butterfly-flutter-fast .butterfly-wing-left,
-        .butterfly-flutter-fast .butterfly-wing-right {
-          animation: butterfly-flap 0.28s ease-in-out infinite;
-        }
-        @keyframes butterfly-flap {
-          0%,
-          100% {
-            transform: scaleX(1);
-          }
-          50% {
-            transform: scaleX(0.55);
-          }
-        }
         .butterfly-fly {
           animation: butterfly-takeoff 1.6s ease-in forwards;
         }
@@ -115,10 +53,6 @@ export function Butterfly({ flying, light = false }: ButterflyProps) {
           }
         }
         @media (prefers-reduced-motion: reduce) {
-          .butterfly-flutter .butterfly-wing-left,
-          .butterfly-flutter .butterfly-wing-right,
-          .butterfly-flutter-fast .butterfly-wing-left,
-          .butterfly-flutter-fast .butterfly-wing-right,
           .butterfly-fly {
             animation: none;
           }
