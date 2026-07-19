@@ -44,10 +44,10 @@ export default async function CommercantPage() {
         </p>
       )}
 
-      <div className="rounded-lg bg-leaf-700 p-6 text-white">
-        <p className="text-sm uppercase tracking-wide text-leaf-100">Solde disponible</p>
+      <div className="rounded-lg bg-brand-700 p-6 text-white">
+        <p className="text-sm uppercase tracking-wide text-brand-100">Solde disponible</p>
         <p className="text-4xl font-semibold">{formatGatinelles(balanceCents)}</p>
-        <p className="mt-2 text-sm text-leaf-100">
+        <p className="mt-2 text-sm text-brand-100">
           Les gâtinelles détenues par un commerçant n&apos;expirent jamais.
         </p>
       </div>

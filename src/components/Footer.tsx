@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="border-t border-neutral-200 bg-white">
+    <footer className="border-t border-neutral-200 bg-white pb-32 md:pb-0">
       <div className="mx-auto flex max-w-4xl flex-wrap gap-4 px-4 py-4 text-xs text-neutral-500">
         <Link href="/mentions-legales" className="hover:text-neutral-700">
           Mentions légales

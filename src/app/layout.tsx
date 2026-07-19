@@ -4,6 +4,7 @@ import { Lora, Roboto } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { NavBar } from "@/components/NavBar";
+import { BottomNav } from "@/components/BottomNav";
 import { Footer } from "@/components/Footer";
 
 // Polices reprises du site de l'association (gatinemois.com) : Lora pour les
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#e1523d",
+  themeColor: "#4f8fc0",
 };
 
 export default function RootLayout({
@@ -55,8 +56,9 @@ export default function RootLayout({
         </Script>
         <Providers>
           <NavBar />
-          <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">{children}</main>
+          <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 pb-24 md:pb-8">{children}</main>
           <Footer />
+          <BottomNav />
         </Providers>
       </body>
     </html>

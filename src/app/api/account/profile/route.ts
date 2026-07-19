@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { geocodeAddress } from "@/lib/geocoding";
 
 const schema = z.object({
   fullName: z.string().min(2),
@@ -30,6 +31,20 @@ export async function POST(request: Request) {
   }
   const data = parsed.data;
 
+  // Géocodage en amont (best-effort) : uniquement si l'adresse a réellement
+  // changé, pour ne pas re-géocoder inutilement à chaque modification de
+  // profil (nom, email...) et rester dans la limite d'usage de Nominatim.
+  let coordinates: { latitude: number; longitude: number } | null | undefined;
+  if (session.user.accountType === "COMMERCANT" && data.merchant) {
+    const current = await prisma.merchantProfile.findUnique({
+      where: { userId: session.user.id },
+      select: { address: true },
+    });
+    if (current && current.address !== data.merchant.address) {
+      coordinates = await geocodeAddress(data.merchant.address);
+    }
+  }
+
   try {
     await prisma.$transaction(async (tx) => {
       await tx.user.update({
@@ -45,6 +60,12 @@ export async function POST(request: Request) {
             address: data.merchant.address,
             category: data.merchant.category,
             iban: data.merchant.iban,
+            // `undefined` = adresse inchangée, on ne touche pas aux coordonnées
+            // existantes ; `null` = adresse changée mais non géolocalisable,
+            // on efface les anciennes coordonnées (devenues fausses).
+            ...(coordinates !== undefined
+              ? { latitude: coordinates?.latitude ?? null, longitude: coordinates?.longitude ?? null }
+              : {}),
           },
         });
       }

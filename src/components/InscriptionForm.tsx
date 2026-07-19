@@ -3,9 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function InscriptionForm() {
+interface InscriptionFormProps {
+  initialAccountType?: "PARTICULIER" | "COMMERCANT";
+}
+
+export function InscriptionForm({ initialAccountType = "PARTICULIER" }: InscriptionFormProps) {
   const router = useRouter();
-  const [accountType, setAccountType] = useState<"PARTICULIER" | "COMMERCANT">("PARTICULIER");
+  const [accountType, setAccountType] = useState<"PARTICULIER" | "COMMERCANT">(initialAccountType);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

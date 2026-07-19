@@ -11,20 +11,22 @@
   --font-sans: var(--font-body);
   --font-heading: var(--font-heading);
 
-  /* Rouge-orangé — couleur d'action dominante sur gatinemois.com */
-  --color-brand-50: #fdf1ef;
-  --color-brand-100: #fbdfda;
-  --color-brand-300: #ee9a8b;
-  --color-brand-700: #e1523d;
-  --color-brand-800: #c23f2c;
+  /* Bleu — couleur du papillon du logo Gâtinelle, identité propre à la
+     monnaie (distincte du rouge-orangé du site gatinemois.com) */
+  --color-brand-50: #f0f6fb;
+  --color-brand-100: #dcebf6;
+  --color-brand-300: #9cc3e0;
+  --color-brand-700: #4f8fc0;
+  --color-brand-800: #3d7098;
 
-  /* Vert — accents positifs (solde, succès), deuxième couleur du site */
-  --color-leaf-50: #f2f8ec;
-  --color-leaf-100: #e1f0d0;
-  --color-leaf-300: #b6dd7c;
-  --color-leaf-700: #6ea030;
-  --color-leaf-800: #56801f;
-  --color-leaf-900: #2f4a14;
+  /* Vert — touches ponctuelles évoquant la nature/le local (badges,
+     messages positifs), jamais une couleur dominante */
+  --color-leaf-50: #f1f7f1;
+  --color-leaf-100: #dcebdd;
+  --color-leaf-300: #a8cbac;
+  --color-leaf-700: #5a8f5e;
+  --color-leaf-800: #446e47;
+  --color-leaf-900: #2c4a2e;
 }
 
 body {
