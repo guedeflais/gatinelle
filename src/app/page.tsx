@@ -11,7 +11,7 @@ export default async function Home() {
 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center gap-6 rounded-2xl bg-gradient-to-br from-brand-700 to-leaf-700 px-6 py-16 text-center text-white">
-      <Butterfly flying={false} />
+      <Butterfly flying={false} light />
       <div>
         <h1 className="text-3xl font-semibold">
           Bienvenue sur

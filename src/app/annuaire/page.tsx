@@ -1,12 +1,7 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { MerchantMapLoader } from "@/components/MerchantMapLoader";
 
 export default async function AnnuairePage() {
-  const session = await auth();
-  if (!session?.user) redirect("/connexion");
-
   const merchants = await prisma.merchantProfile.findMany({
     where: { validated: true },
     select: { businessName: true, address: true, category: true, latitude: true, longitude: true },
