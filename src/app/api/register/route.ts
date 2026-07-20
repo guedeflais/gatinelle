@@ -32,7 +32,15 @@ export async function POST(request: Request) {
   const body = await request.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return corsJson({ error: parsed.error.flatten() }, { status: 400 });
+    // Chemin en pointillés (ex. "merchant.iban") plutôt que .flatten(), qui ne
+    // distingue pas les champs imbriqués — permet à l'appelant de savoir
+    // précisément quel champ signaler, y compris dans l'objet merchant.
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const path = issue.path.join(".");
+      if (!fieldErrors[path]) fieldErrors[path] = issue.message;
+    }
+    return corsJson({ error: "Certains champs sont invalides.", fieldErrors }, { status: 400 });
   }
   const data = parsed.data;
   if (data.accountType === "COMMERCANT" && !data.merchant) {
