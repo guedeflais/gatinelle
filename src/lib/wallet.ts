@@ -260,10 +260,11 @@ export async function payMerchantByWristband(
   }
 
   return prisma.$transaction(async (tx) => {
-    const buyer = await tx.user.findUnique({
-      where: { nfcTagUid: tagUid },
-      include: { wallet: true },
+    const nfcTag = await tx.nfcTag.findUnique({
+      where: { tagUid },
+      include: { user: { include: { wallet: true } } },
     });
+    const buyer = nfcTag?.user;
     if (!buyer?.wallet) throw new NotFoundError("Bracelet");
 
     const stand = await tx.user.findUnique({

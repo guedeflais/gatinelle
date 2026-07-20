@@ -10,7 +10,8 @@ const schema = z.object({
 
 /**
  * Lie un bracelet/carte NFC à un compte fraîchement créé via l'inscription
- * express (voir /api/register-express). N'écrase jamais un bracelet déjà lié.
+ * express (voir /api/register-express). Un compte peut avoir plusieurs tags
+ * (voir modèle NfcTag) ; cette route se contente d'ajouter celui-ci.
  */
 export async function PATCH(request: Request) {
   const body = await request.json();
@@ -24,12 +25,9 @@ export async function PATCH(request: Request) {
   if (!user) {
     return NextResponse.json({ error: "Compte introuvable." }, { status: 404 });
   }
-  if (user.nfcTagUid) {
-    return NextResponse.json({ error: "Ce compte a déjà un bracelet lié." }, { status: 409 });
-  }
 
   try {
-    await prisma.user.update({ where: { id: userId }, data: { nfcTagUid } });
+    await prisma.nfcTag.create({ data: { userId, tagUid: nfcTagUid } });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
       return NextResponse.json({ error: "Ce bracelet est déjà lié à un autre compte." }, { status: 409 });
