@@ -76,6 +76,27 @@ model User {
   validatedTransactions Transaction[]    @relation("TransactionValidatedBy")
   sentTransactions     Transaction[]     @relation("TransactionFrom")
   receivedTransactions Transaction[]     @relation("TransactionTo")
+  mobileSessions       MobileSession[]
+}
+
+// Jeton d'authentification pour l'application mobile (React Native), qui n'a
+// pas de cookie de session partagé avec le site web. Émis par
+// POST /api/mobile/login après vérification du numéro d'adhérent+PIN ou de
+// l'email+mot de passe (voir lib/pin.ts / lib/passwordAuth.ts, réutilisés à
+// l'identique — même verrouillage anti-brute-force que sur le web). Le jeton
+// lui-même n'est jamais stocké : seul son empreinte SHA-256 l'est, comme un
+// mot de passe, pour qu'une fuite de la base ne suffise pas à usurper une
+// session (voir lib/mobileAuth.ts).
+model MobileSession {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  tokenHash  String   @unique
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+  lastUsedAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model MerchantProfile {
