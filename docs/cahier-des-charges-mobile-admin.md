@@ -86,10 +86,13 @@ optionnel (Agent ou Admin) s'il s'agit d'un membre actif de l'association.
   facilement connu pour justifier un vecteur de déni de service).
 - Page "Modifier mon profil" : nom, email pour tous ; adresse, catégorie, IBAN en plus
   pour un commerçant.
-- La carte NFC n'est utilisée que dans le cadre du **mode festival** (voir 5.7), pas pour
-  le paiement chez un commerçant au quotidien (voir 5.4) — ce choix évite de dépendre du
-  matériel personnel du client ou du commerçant en dehors d'un événement où l'association
-  contrôle les appareils utilisés aux stands.
+- La carte NFC n'est utilisée que dans le cadre du **mode festival** (voir 5.7) et de la
+  **Gâtine Box** (voir 5.8), pas pour le paiement chez un commerçant au quotidien (voir
+  5.4) — ce choix évite de dépendre du matériel personnel du client ou du commerçant en
+  dehors de ces deux contextes.
+- **Un compte peut être lié à plusieurs cartes/bracelets NFC** (bracelet de festival
+  perdu puis réémis, carte Gâtine Box ajoutée à un compte déjà existant, etc.) — gérable
+  depuis l'espace "Mon compte".
 
 ### 5.2 Achat de gâtinelles
 - 1 gâtinelle = 1 euro, sans exception.
@@ -198,6 +201,48 @@ personnel, ni du client ni du stand, n'est requis pour lire une carte NFC.
 - Prévoir un mode de repli clair (saisie manuelle du numéro d'adhérent) si un appareil de
   stand ne supporte pas la lecture NFC malgré tout (panne, mauvaise configuration).
 
+### 5.8 Gâtine Box (carte cadeau NFC) 📋 *envisagée*
+
+La Gâtine Box est une box cadeau contenant une carte NFC, vendue chez **n'importe quel
+commerçant agréé du réseau** (pas seulement en mode festival) — **c'est le client qui
+fixe librement le montant** au moment de l'achat, exactement comme pour une carte
+cadeau classique du commerce.
+
+**Confection de la box** (réservée à l'administration, avant toute mise en vente) :
+- Une carte NFC neuve est associée à un **numéro de box** (visible, imprimé à
+  l'extérieur de l'emballage) et à un **code d'activation** distinct (imprimé sur un
+  papier glissé à l'intérieur, invisible de l'extérieur).
+- La box est ensuite fermée avec un **autocollant inviolable** ("scellé de garantie",
+  matériel courant et peu coûteux, sans impression spécialisée nécessaire). Ce sceau est
+  la seule barrière physique nécessaire : tant qu'il est intact, personne — ni le
+  commerçant, ni l'association après la confection — n'a pu voir le code d'activation.
+- En base de données, seul le **hash** du code d'activation est stocké (jamais en clair
+  — même principe que les mots de passe et codes PIN, voir 7.6), avec le numéro de box
+  (en clair, lui, puisqu'il doit être lisible pour la vente) et l'identifiant de la
+  carte associée. Statut initial : "fabriquée, non vendue".
+
+**Vente chez le commerçant** :
+- Le commerçant reçoit le paiement du client (au montant que celui-ci choisit) et
+  saisit le **numéro de box** (visible sur l'emballage) + le prix reçu, après avoir
+  vérifié que le sceau est intact.
+- Le serveur enregistre ce prix **une seule fois, de façon définitive** (non modifiable
+  ensuite) et fait passer la box au statut "vendue".
+- Le commerçant n'a à aucun moment accès au code d'activation : la vente ne lui donne
+  aucun moyen d'activer la box lui-même (voir règle de sécurité 7.9).
+
+**Activation par le bénéficiaire, depuis l'application** :
+- Le bénéficiaire ouvre la box (cassant le sceau) et y trouve le code d'activation.
+- S'il a déjà un compte, il se connecte puis saisit le numéro de box + le code
+  d'activation. S'il n'en a pas encore, il en crée un (inscription classique, voir 5.1)
+  puis fait de même.
+- Le serveur vérifie que le code correspond (hash comparé en temps constant) et que la
+  box est encore au statut "vendue" (jamais déjà activée) : si oui, le compte est
+  crédité du prix enregistré par le commerçant, la carte NFC est liée au compte, et la
+  box passe définitivement au statut "activée".
+- Une fois activée, la carte et le compte fonctionnent **exactement comme n'importe quel
+  autre compte/carte** de l'association — aucune restriction résiduelle liée à leur
+  origine "Gâtine Box".
+
 ## 6. Fonctionnalités côté administration
 
 Accessibles aux comptes ayant le rôle Agent ou Admin (voir section 4), au sein de la même
@@ -220,6 +265,9 @@ application (pas une application séparée) :
     encaisser par simple clic (voir 5.7).
   - Liste des stands actifs, avec possibilité de les retirer de l'annuaire après
     l'événement (l'historique de leurs transactions reste conservé).
+- **Confection des Gâtine Box** (voir 5.8) : génération d'un numéro de box + code
+  d'activation pour chaque nouvelle carte NFC destinée à une box, réservée aux comptes
+  Admin — jamais accessible à un commerçant.
 - **Import en masse** (besoin identifié, non détaillé plus avant dans ce document) :
   possibilité d'importer un fichier (Excel) d'adhérents/commerçants existants, avec
   reprise d'un solde déjà détenu si applicable, et distribution d'identifiants
@@ -253,6 +301,12 @@ application (pas une application séparée) :
    conservation définie, et une politique de confidentialité conforme au RGPD
    (responsable de traitement identifié, droits d'accès/rectification/effacement,
    contact CNIL).
+9. **Gâtine Box** (voir 5.8) : le numéro de box est visible et sert à la vente, mais
+   l'activation exige en plus le **code d'activation** caché à l'intérieur de la box
+   (jamais connu du commerçant) ; le prix est enregistré **une seule fois, de façon
+   définitive** ; l'activation est **atomique et protégée contre l'activation en
+   double** (même principe que la règle 4) ; **un compte Commerçant ne peut jamais
+   activer de box** — seul le bénéficiaire, depuis son propre compte, en a le droit.
 
 ## 8. Exigences de sécurité (retour d'expérience de la v1 en production)
 
@@ -272,6 +326,11 @@ application (pas une application séparée) :
   infructueuses (même mécanisme que le blocage PIN existant), pour empêcher qu'un stand
   malveillant ou un tiers ne tente de deviner le PIN d'un client par essais répétés sur
   cette étape de confirmation.
+- Le **code d'activation d'une Gâtine Box** (voir 5.8/7.9) est haché (jamais stocké en
+  clair) et comparé en temps constant côté serveur, avec un compteur d'échecs et un
+  blocage après plusieurs tentatives infructueuses — même rigueur que la vérification
+  d'un code PIN, pour empêcher qu'un tiers connaissant seulement le numéro de box
+  (visible) ne devine le code caché par essais répétés.
 
 ## 9. Contraintes non fonctionnelles
 
