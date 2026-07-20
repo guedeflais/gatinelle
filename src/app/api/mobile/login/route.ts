@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { z } from "zod";
 import { attemptPinLogin } from "@/lib/pin";
 import { attemptPasswordLogin } from "@/lib/passwordAuth";
 import { createMobileSession } from "@/lib/mobileAuth";
+import { corsJson, corsOptionsResponse } from "@/lib/mobileCors";
 
 // Même méthode que la connexion web : numéro d'adhérent+PIN (comptoir) ou
 // email+mot de passe. Réutilise attemptPinLogin/attemptPasswordLogin tels
@@ -13,11 +13,15 @@ const schema = z.union([
   z.object({ email: z.string().email(), password: z.string().min(1) }),
 ]);
 
+export async function OPTIONS() {
+  return corsOptionsResponse();
+}
+
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Identifiants requis." }, { status: 400 });
+    return corsJson({ error: "Identifiants requis." }, { status: 400 });
   }
 
   const user =
@@ -26,12 +30,12 @@ export async function POST(request: Request) {
       : await attemptPasswordLogin(parsed.data.email, parsed.data.password);
 
   if (!user) {
-    return NextResponse.json({ error: "Identifiants incorrects." }, { status: 401 });
+    return corsJson({ error: "Identifiants incorrects." }, { status: 401 });
   }
 
   const { token, expiresAt } = await createMobileSession(user.id);
 
-  return NextResponse.json({
+  return corsJson({
     token,
     expiresAt: expiresAt.toISOString(),
     user: {

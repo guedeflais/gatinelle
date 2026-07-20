@@ -1,10 +1,14 @@
-import { NextResponse } from "next/server";
 import { extractBearerToken, revokeMobileSession } from "@/lib/mobileAuth";
+import { corsJson, corsOptionsResponse } from "@/lib/mobileCors";
+
+export async function OPTIONS() {
+  return corsOptionsResponse();
+}
 
 export async function POST(request: Request) {
   const token = extractBearerToken(request);
   if (token) {
     await revokeMobileSession(token);
   }
-  return NextResponse.json({ ok: true });
+  return corsJson({ ok: true });
 }
