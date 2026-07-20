@@ -15,6 +15,7 @@ export interface MobileSessionUser {
   accountType: AccountType;
   staffRole: StaffRole | null;
   merchantId: string | null;
+  merchantCode: string | null;
 }
 
 function hashToken(token: string): string {
@@ -62,6 +63,7 @@ export async function getUserFromMobileToken(token: string): Promise<MobileSessi
     accountType: user.accountType,
     staffRole: user.staffRole,
     merchantId: user.merchantProfile?.id ?? null,
+    merchantCode: user.merchantProfile?.merchantCode ?? null,
   };
 }
 
