@@ -7,6 +7,8 @@ interface InscriptionFormProps {
   initialAccountType?: "PARTICULIER" | "COMMERCANT";
 }
 
+type FieldErrors = Record<string, string>;
+
 export function InscriptionForm({ initialAccountType = "PARTICULIER" }: InscriptionFormProps) {
   const router = useRouter();
   const [accountType, setAccountType] = useState<"PARTICULIER" | "COMMERCANT">(initialAccountType);
@@ -20,12 +22,14 @@ export function InscriptionForm({ initialAccountType = "PARTICULIER" }: Inscript
   const [category, setCategory] = useState("");
   const [iban, setIban] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [loading, setLoading] = useState(false);
   const [memberNumber, setMemberNumber] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
 
     if (!/^\d{4}$/.test(pin)) {
       setError("Le code PIN doit comporter exactement 4 chiffres.");
@@ -55,6 +59,7 @@ export function InscriptionForm({ initialAccountType = "PARTICULIER" }: Inscript
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setError(typeof data.error === "string" ? data.error : "Impossible de créer le compte.");
+      setFieldErrors(data.fieldErrors ?? {});
       return;
     }
     const data = await res.json();
@@ -115,6 +120,7 @@ export function InscriptionForm({ initialAccountType = "PARTICULIER" }: Inscript
           onChange={(e) => setFullName(e.target.value)}
           className="rounded border border-neutral-300 px-3 py-2"
         />
+        {fieldErrors.fullName && <span className="text-sm text-red-600">{fieldErrors.fullName}</span>}
       </label>
       <label className="flex flex-col gap-1">
         Email
@@ -125,6 +131,7 @@ export function InscriptionForm({ initialAccountType = "PARTICULIER" }: Inscript
           onChange={(e) => setEmail(e.target.value)}
           className="rounded border border-neutral-300 px-3 py-2"
         />
+        {fieldErrors.email && <span className="text-sm text-red-600">{fieldErrors.email}</span>}
       </label>
       <label className="flex flex-col gap-1">
         Mot de passe (8 caractères minimum, pour la gestion de votre compte)
@@ -136,6 +143,7 @@ export function InscriptionForm({ initialAccountType = "PARTICULIER" }: Inscript
           onChange={(e) => setPassword(e.target.value)}
           className="rounded border border-neutral-300 px-3 py-2"
         />
+        {fieldErrors.password && <span className="text-sm text-red-600">{fieldErrors.password}</span>}
       </label>
 
       <div className="flex flex-col gap-1">
@@ -155,6 +163,7 @@ export function InscriptionForm({ initialAccountType = "PARTICULIER" }: Inscript
               onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
               className="rounded border border-neutral-300 px-3 py-2"
             />
+            {fieldErrors.pin && <span className="text-sm text-red-600">{fieldErrors.pin}</span>}
           </label>
           <label className="flex flex-1 flex-col gap-1">
             Confirmer le PIN
@@ -182,6 +191,9 @@ export function InscriptionForm({ initialAccountType = "PARTICULIER" }: Inscript
               onChange={(e) => setBusinessName(e.target.value)}
               className="rounded border border-neutral-300 px-3 py-2"
             />
+            {fieldErrors["merchant.businessName"] && (
+              <span className="text-sm text-red-600">{fieldErrors["merchant.businessName"]}</span>
+            )}
           </label>
           <label className="flex flex-col gap-1">
             Adresse
@@ -191,6 +203,9 @@ export function InscriptionForm({ initialAccountType = "PARTICULIER" }: Inscript
               onChange={(e) => setAddress(e.target.value)}
               className="rounded border border-neutral-300 px-3 py-2"
             />
+            {fieldErrors["merchant.address"] && (
+              <span className="text-sm text-red-600">{fieldErrors["merchant.address"]}</span>
+            )}
           </label>
           <label className="flex flex-col gap-1">
             Catégorie (ex : boulangerie, librairie...)
@@ -200,6 +215,9 @@ export function InscriptionForm({ initialAccountType = "PARTICULIER" }: Inscript
               onChange={(e) => setCategory(e.target.value)}
               className="rounded border border-neutral-300 px-3 py-2"
             />
+            {fieldErrors["merchant.category"] && (
+              <span className="text-sm text-red-600">{fieldErrors["merchant.category"]}</span>
+            )}
           </label>
           <label className="flex flex-col gap-1">
             IBAN (pour les reconversions en euros)
@@ -210,6 +228,9 @@ export function InscriptionForm({ initialAccountType = "PARTICULIER" }: Inscript
               onChange={(e) => setIban(e.target.value)}
               className="rounded border border-neutral-300 px-3 py-2"
             />
+            {fieldErrors["merchant.iban"] && (
+              <span className="text-sm text-red-600">{fieldErrors["merchant.iban"]}</span>
+            )}
           </label>
         </>
       )}

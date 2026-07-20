@@ -9,17 +9,17 @@ import { geocodeAddress } from "@/lib/geocoding";
 import { corsJson, corsOptionsResponse } from "@/lib/mobileCors";
 
 const schema = z.object({
-  fullName: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(8),
+  fullName: z.string().min(2, "Le nom complet doit comporter au moins 2 caractères."),
+  email: z.string().email("Adresse email invalide."),
+  password: z.string().min(8, "Le mot de passe doit comporter au moins 8 caractères."),
   pin: z.string().regex(PIN_REGEX, "Le code PIN doit comporter exactement 4 chiffres."),
   accountType: z.enum(["PARTICULIER", "COMMERCANT"]),
   merchant: z
     .object({
-      businessName: z.string().min(2),
-      address: z.string().min(2),
-      category: z.string().min(2),
-      iban: z.string().min(10),
+      businessName: z.string().min(2, "Le nom du commerce doit comporter au moins 2 caractères."),
+      address: z.string().min(2, "L'adresse doit comporter au moins 2 caractères."),
+      category: z.string().min(2, "La catégorie doit comporter au moins 2 caractères."),
+      iban: z.string().min(10, "L'IBAN doit comporter au moins 10 caractères."),
     })
     .optional(),
 });
@@ -32,7 +32,15 @@ export async function POST(request: Request) {
   const body = await request.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return corsJson({ error: parsed.error.flatten() }, { status: 400 });
+    // Chemin en pointillés (ex. "merchant.iban") plutôt que .flatten(), qui ne
+    // distingue pas les champs imbriqués — permet à l'appelant de savoir
+    // précisément quel champ signaler, y compris dans l'objet merchant.
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const path = issue.path.join(".");
+      if (!fieldErrors[path]) fieldErrors[path] = issue.message;
+    }
+    return corsJson({ error: "Certains champs sont invalides.", fieldErrors }, { status: 400 });
   }
   const data = parsed.data;
   if (data.accountType === "COMMERCANT" && !data.merchant) {
