@@ -9,17 +9,17 @@ import { geocodeAddress } from "@/lib/geocoding";
 import { corsJson, corsOptionsResponse } from "@/lib/mobileCors";
 
 const schema = z.object({
-  fullName: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(8),
+  fullName: z.string().min(2, "Le nom complet doit comporter au moins 2 caractères."),
+  email: z.string().email("Adresse email invalide."),
+  password: z.string().min(8, "Le mot de passe doit comporter au moins 8 caractères."),
   pin: z.string().regex(PIN_REGEX, "Le code PIN doit comporter exactement 4 chiffres."),
   accountType: z.enum(["PARTICULIER", "COMMERCANT"]),
   merchant: z
     .object({
-      businessName: z.string().min(2),
-      address: z.string().min(2),
-      category: z.string().min(2),
-      iban: z.string().min(10),
+      businessName: z.string().min(2, "Le nom du commerce doit comporter au moins 2 caractères."),
+      address: z.string().min(2, "L'adresse doit comporter au moins 2 caractères."),
+      category: z.string().min(2, "La catégorie doit comporter au moins 2 caractères."),
+      iban: z.string().min(10, "L'IBAN doit comporter au moins 10 caractères."),
     })
     .optional(),
 });
