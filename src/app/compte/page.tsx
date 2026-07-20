@@ -1,16 +1,13 @@
 import { redirect } from "next/navigation";
-import { Clock, PiggyBank, TrendingDown, Undo2 } from "lucide-react";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight, Clock, PiggyBank, TrendingDown, Undo2 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getBalanceCents } from "@/lib/wallet";
 import { formatGatinelles } from "@/lib/money";
 import { startOfMonthParis } from "@/lib/dateRanges";
-import {
-  TRANSACTION_ICONS,
-  TRANSACTION_ICON_STYLES,
-  STATUS_BADGE,
-  getCounterpartyLabel,
-} from "@/lib/transactionDisplay";
+import { getTransactionPage } from "@/lib/transactions";
+import { TRANSACTION_ICONS, TRANSACTION_ICON_STYLES, STATUS_BADGE } from "@/lib/transactionDisplay";
 
 const TRANSACTION_LABELS: Record<string, string> = {
   PURCHASE: "Achat",
@@ -22,7 +19,7 @@ const TRANSACTION_LABELS: Record<string, string> = {
 export default async function ComptePage({
   searchParams,
 }: {
-  searchParams: Promise<{ achat?: string }>;
+  searchParams: Promise<{ achat?: string; page?: string }>;
 }) {
   const session = await auth();
   if (!session?.user) redirect("/connexion");
@@ -30,25 +27,26 @@ export default async function ComptePage({
   const wallet = await prisma.wallet.findUnique({ where: { userId: session.user.id } });
   if (!wallet) redirect("/connexion");
 
-  const { achat } = await searchParams;
+  const { achat, page: pageParam } = await searchParams;
+  const page = Number(pageParam) || 1;
   const isCommercant = session.user.accountType === "COMMERCANT";
 
-  const [balanceCents, lots, transactions, user, spentThisMonth, totalPurchased, pendingConversions] =
+  const [
+    balanceCents,
+    lots,
+    { transactions, hasMore: hasMoreTransactions },
+    user,
+    spentThisMonth,
+    totalPurchased,
+    pendingConversions,
+  ] =
     await Promise.all([
       getBalanceCents(prisma, wallet.id),
       prisma.gatinelleLot.findMany({
         where: { walletId: wallet.id, status: "ACTIVE", remainingCents: { gt: 0 } },
         orderBy: [{ expiresAt: { sort: "asc", nulls: "last" } }],
       }),
-      prisma.transaction.findMany({
-        where: { OR: [{ fromUserId: session.user.id }, { toUserId: session.user.id }] },
-        orderBy: { createdAt: "desc" },
-        take: 30,
-        include: {
-          fromUser: { select: { fullName: true, merchantProfile: { select: { businessName: true } } } },
-          toUser: { select: { fullName: true, merchantProfile: { select: { businessName: true } } } },
-        },
-      }),
+      getTransactionPage(session.user.id, page),
       prisma.user.findUniqueOrThrow({
         where: { id: session.user.id },
         select: { memberNumber: true, fullName: true },
@@ -158,10 +156,8 @@ export default async function ComptePage({
         <h2 className="mb-3 text-lg font-medium">Historique</h2>
         <div className="flex flex-col">
           {transactions.map((t) => {
-            const isOutgoing = t.fromUserId === session.user.id;
             const Icon = TRANSACTION_ICONS[t.type];
             const status = STATUS_BADGE[t.status];
-            const counterparty = getCounterpartyLabel(t, session.user.id);
             return (
               <div key={t.id} className="flex items-center gap-3 border-b border-neutral-100 py-3">
                 <span
@@ -172,12 +168,12 @@ export default async function ComptePage({
                 <div className="min-w-0 flex-1">
                   <p className="font-medium">{TRANSACTION_LABELS[t.type] ?? t.type}</p>
                   <p className="truncate text-xs text-neutral-500">
-                    {counterparty ?? t.createdAt.toLocaleDateString("fr-FR")}
+                    {t.counterpartyLabel ?? t.createdAt.toLocaleDateString("fr-FR")}
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <p className={isOutgoing ? "text-red-600" : "text-leaf-700"}>
-                    {isOutgoing ? "-" : "+"}
+                  <p className={t.isOutgoing ? "text-red-600" : "text-leaf-700"}>
+                    {t.isOutgoing ? "-" : "+"}
                     {formatGatinelles(t.amountCents)}
                   </p>
                   <p className={`flex items-center gap-1 text-xs ${status.className}`}>
@@ -192,6 +188,32 @@ export default async function ComptePage({
             <p className="py-4 text-center text-neutral-400">Aucune transaction pour l&apos;instant.</p>
           )}
         </div>
+
+        {(page > 1 || hasMoreTransactions) && (
+          <div className="mt-4 flex items-center justify-between">
+            {page > 1 ? (
+              <Link
+                href={`/compte?page=${page - 1}`}
+                className="flex items-center gap-1 rounded border border-neutral-300 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
+              >
+                <ChevronLeft size={16} /> Précédent
+              </Link>
+            ) : (
+              <span />
+            )}
+            <span className="text-sm text-neutral-500">Page {page}</span>
+            {hasMoreTransactions ? (
+              <Link
+                href={`/compte?page=${page + 1}`}
+                className="flex items-center gap-1 rounded border border-neutral-300 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
+              >
+                Suivant <ChevronRight size={16} />
+              </Link>
+            ) : (
+              <span />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
