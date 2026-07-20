@@ -18,13 +18,19 @@ export default async function Home() {
           <br />
           La Gâtinelle
         </h1>
-        <p className="mt-3 max-w-xs text-brand-100">
-          La monnaie locale numérique de la Gâtine Poitevine
+        <p className="mt-3 text-brand-100">
+          La monnaie locale numérique
+          <br />
+          de la Gâtine Poitevine
         </p>
-        <p className="font-heading mt-4 max-w-sm text-lg italic text-white">
-          Comme le papillon butine de fleur en fleur et féconde la prairie sur son
-          passage, la Gâtinelle circule de main en main à travers le Gâtinais et fait
-          grandir tous ceux qui la font vivre.
+        <p className="font-heading mt-4 text-lg italic text-white">
+          Comme le papillon butine de fleur en fleur
+          <br />
+          et féconde la prairie sur son passage,
+          <br />
+          la Gâtinelle circule de main en main à travers le Gâtinais
+          <br />
+          et fait grandir tous ceux qui la font vivre.
         </p>
       </div>
       <div className="flex w-full max-w-sm flex-col gap-3">
