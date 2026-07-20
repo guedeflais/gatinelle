@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { Prisma } from "@prisma/client";
@@ -7,6 +6,7 @@ import { generateMerchantCode } from "@/lib/merchantCode";
 import { generateMemberNumber } from "@/lib/memberNumber";
 import { PIN_REGEX } from "@/lib/pin";
 import { geocodeAddress } from "@/lib/geocoding";
+import { corsJson, corsOptionsResponse } from "@/lib/mobileCors";
 
 const schema = z.object({
   fullName: z.string().min(2),
@@ -24,23 +24,24 @@ const schema = z.object({
     .optional(),
 });
 
+export async function OPTIONS() {
+  return corsOptionsResponse();
+}
+
 export async function POST(request: Request) {
   const body = await request.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return corsJson({ error: parsed.error.flatten() }, { status: 400 });
   }
   const data = parsed.data;
   if (data.accountType === "COMMERCANT" && !data.merchant) {
-    return NextResponse.json(
-      { error: "Les informations du commerce sont requises." },
-      { status: 400 }
-    );
+    return corsJson({ error: "Les informations du commerce sont requises." }, { status: 400 });
   }
 
   const existing = await prisma.user.findUnique({ where: { email: data.email.toLowerCase() } });
   if (existing) {
-    return NextResponse.json({ error: "Cet email est déjà utilisé." }, { status: 409 });
+    return corsJson({ error: "Cet email est déjà utilisé." }, { status: 409 });
   }
 
   const passwordHash = await bcrypt.hash(data.password, 12);
@@ -106,8 +107,8 @@ export async function POST(request: Request) {
       return created;
     });
 
-    return NextResponse.json({ id: user.id, memberNumber: user.memberNumber }, { status: 201 });
+    return corsJson({ id: user.id, memberNumber: user.memberNumber }, { status: 201 });
   } catch {
-    return NextResponse.json({ error: "Impossible de créer le compte." }, { status: 500 });
+    return corsJson({ error: "Impossible de créer le compte." }, { status: 500 });
   }
 }
