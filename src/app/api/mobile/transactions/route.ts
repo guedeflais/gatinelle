@@ -1,5 +1,5 @@
 import { extractBearerToken, getUserFromMobileToken } from "@/lib/mobileAuth";
-import { prisma } from "@/lib/prisma";
+import { getTransactionPage } from "@/lib/transactions";
 import { corsJson, corsOptionsResponse } from "@/lib/mobileCors";
 
 export async function OPTIONS() {
@@ -13,35 +13,14 @@ export async function GET(request: Request) {
     return corsJson({ error: "Non authentifié." }, { status: 401 });
   }
 
-  const transactions = await prisma.transaction.findMany({
-    where: { OR: [{ fromUserId: user.id }, { toUserId: user.id }] },
-    orderBy: { createdAt: "desc" },
-    take: 30,
-    include: {
-      fromUser: { select: { fullName: true, merchantProfile: { select: { businessName: true } } } },
-      toUser: { select: { fullName: true, merchantProfile: { select: { businessName: true } } } },
-    },
-  });
+  const url = new URL(request.url);
+  const page = Number(url.searchParams.get("page")) || 1;
+
+  const { transactions, page: resolvedPage, hasMore } = await getTransactionPage(user.id, page);
 
   return corsJson({
-    transactions: transactions.map((t) => {
-      const isOutgoing = t.fromUserId === user.id;
-      // Seul le type PAYMENT a un interlocuteur humain identifiable des deux
-      // côtés (achat/reconversion/péremption se font face à l'association).
-      const counterpartyUser = isOutgoing ? t.toUser : t.fromUser;
-      const counterpartyLabel =
-        t.type === "PAYMENT" && counterpartyUser
-          ? (counterpartyUser.merchantProfile?.businessName ?? counterpartyUser.fullName)
-          : null;
-      return {
-        id: t.id,
-        type: t.type,
-        status: t.status,
-        amountCents: t.amountCents,
-        isOutgoing,
-        counterpartyLabel,
-        createdAt: t.createdAt.toISOString(),
-      };
-    }),
+    transactions: transactions.map((t) => ({ ...t, createdAt: t.createdAt.toISOString() })),
+    page: resolvedPage,
+    hasMore,
   });
 }

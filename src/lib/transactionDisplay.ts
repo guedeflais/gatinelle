@@ -23,28 +23,3 @@ export const STATUS_BADGE: Record<
   COMPLETED: { label: "Complété", icon: CheckCircle2, className: "text-leaf-700" },
   REJECTED: { label: "Rejeté", icon: XCircle, className: "text-red-600" },
 };
-
-interface CounterpartyUser {
-  fullName: string;
-  merchantProfile: { businessName: string } | null;
-}
-
-interface TransactionForDisplay {
-  type: TransactionType;
-  fromUserId: string | null;
-  toUserId: string | null;
-  fromUser: CounterpartyUser | null;
-  toUser: CounterpartyUser | null;
-}
-
-// Seul le type PAYMENT a un interlocuteur humain identifiable des deux côtés
-// (achat/reconversion/péremption se font face à "l'association"/le système).
-export function getCounterpartyLabel(
-  transaction: TransactionForDisplay,
-  currentUserId: string
-): string | null {
-  if (transaction.type !== "PAYMENT") return null;
-  const counterparty = transaction.fromUserId === currentUserId ? transaction.toUser : transaction.fromUser;
-  if (!counterparty) return null;
-  return counterparty.merchantProfile?.businessName ?? counterparty.fullName;
-}
