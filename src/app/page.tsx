@@ -28,7 +28,7 @@ export default async function Home() {
           <br />
           et féconde la prairie sur son passage,
           <br />
-          la Gâtinelle circule de main en main à travers le Gâtinais
+          la Gâtinelle circule de main en main à travers la Gâtine Poitevine
           <br />
           et fait grandir tous ceux qui la font vivre.
         </p>
