@@ -45,6 +45,30 @@ enum TransactionStatus {
   REJECTED
 }
 
+// Liste fermée plutôt que texte libre : évite les variantes de casse/
+// orthographe/doublons qui rendraient l'annuaire inutilisable pour
+// filtrer les commerçants (voir src/lib/merchantCategory.ts pour les
+// libellés en français).
+enum MerchantCategory {
+  ALIMENTATION
+  BOULANGERIE_PATISSERIE
+  RESTAURANT_CAFE_BAR
+  PRODUCTEUR_MARCHE
+  ARTISANAT
+  COMMERCE_BOUTIQUE
+  BATIMENT_HABITAT
+  SANTE_BIEN_ETRE
+  BEAUTE_COIFFURE
+  CULTURE_LOISIRS
+  TOURISME_HEBERGEMENT
+  SPORT
+  SERVICES_PERSONNE
+  SERVICES_PROFESSIONNELS
+  TRANSPORT_MOBILITE
+  EDUCATION_FORMATION
+  AUTRE
+}
+
 model User {
   id                String      @id @default(cuid())
   email             String      @unique
@@ -125,7 +149,7 @@ model MerchantProfile {
   // null si l'adresse n'a pas pu être géolocalisée.
   latitude      Float?
   longitude     Float?
-  category      String
+  category      MerchantCategory
   iban          String?
   merchantCode  String    @unique
   validated     Boolean   @default(false)

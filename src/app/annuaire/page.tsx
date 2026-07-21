@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { MerchantMapLoader } from "@/components/MerchantMapLoader";
+import { MERCHANT_CATEGORY_LABELS } from "@/lib/merchantCategory";
 
 export default async function AnnuairePage() {
   const merchants = await prisma.merchantProfile.findMany({
@@ -8,11 +9,12 @@ export default async function AnnuairePage() {
     orderBy: { businessName: "asc" },
   });
 
-  const located = merchants.filter(
+  const withLabels = merchants.map((m) => ({ ...m, category: MERCHANT_CATEGORY_LABELS[m.category] }));
+  const located = withLabels.filter(
     (m): m is typeof m & { latitude: number; longitude: number } =>
       m.latitude !== null && m.longitude !== null
   );
-  const unlocated = merchants.filter((m) => m.latitude === null || m.longitude === null);
+  const unlocated = withLabels.filter((m) => m.latitude === null || m.longitude === null);
 
   return (
     <div className="flex flex-col gap-6">

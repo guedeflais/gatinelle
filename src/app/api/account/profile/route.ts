@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
+import { MerchantCategory, Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { geocodeAddress } from "@/lib/geocoding";
@@ -12,7 +12,7 @@ const schema = z.object({
     .object({
       businessName: z.string().min(2),
       address: z.string().min(2),
-      category: z.string().min(2),
+      category: z.nativeEnum(MerchantCategory, { message: "Catégorie invalide." }),
       iban: z.string().min(10),
     })
     .optional(),

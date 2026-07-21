@@ -53,7 +53,7 @@ async function createMerchant(validated = true) {
       userId: user.id,
       businessName: "Boutique Test",
       address: "1 rue du Test",
-      category: "Test",
+      category: "AUTRE",
       merchantCode: generateMerchantCode(),
       validated,
     },
