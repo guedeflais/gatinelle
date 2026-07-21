@@ -3,9 +3,9 @@
 ## 1. Contexte
 
 La Gâtinelle est la monnaie locale complémentaire de la Gâtine Poitevine, portée par
-l'association Ici en Gâtine Poitevine - Gâtin'émois. Elle est utilisée par des
-particuliers et acceptée chez plus de 200 commerçants et prestataires agréés du
-territoire.
+l'association Ici en Gâtine Poitevine - Gâtin'émois et l'association La Gâtinelle
+monnaie locale. Elle est utilisée par des particuliers et acceptée chez plus de 100
+commerçants et prestataires agréés du territoire.
 
 Une application web (responsive, installable comme PWA sur Android et iOS) est déjà en
 production sur `gatinelle.fr` / Google Play, et couvre à elle seule l'ensemble du besoin
