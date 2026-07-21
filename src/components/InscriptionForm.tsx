@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import type { MerchantCategory } from "@prisma/client";
+import { MERCHANT_CATEGORY_OPTIONS } from "@/lib/merchantCategory";
 
 interface InscriptionFormProps {
   initialAccountType?: "PARTICULIER" | "COMMERCANT";
@@ -19,7 +21,7 @@ export function InscriptionForm({ initialAccountType = "PARTICULIER" }: Inscript
   const [pinConfirm, setPinConfirm] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [address, setAddress] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState<MerchantCategory | "">("");
   const [iban, setIban] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -208,13 +210,22 @@ export function InscriptionForm({ initialAccountType = "PARTICULIER" }: Inscript
             )}
           </label>
           <label className="flex flex-col gap-1">
-            Catégorie (ex : boulangerie, librairie...)
-            <input
+            Catégorie
+            <select
               required
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={(e) => setCategory(e.target.value as MerchantCategory)}
               className="rounded border border-neutral-300 px-3 py-2"
-            />
+            >
+              <option value="" disabled>
+                Choisir une catégorie
+              </option>
+              {MERCHANT_CATEGORY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
             {fieldErrors["merchant.category"] && (
               <span className="text-sm text-red-600">{fieldErrors["merchant.category"]}</span>
             )}

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { Prisma } from "@prisma/client";
+import { MerchantCategory, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { generateMerchantCode } from "@/lib/merchantCode";
 import { generateMemberNumber } from "@/lib/memberNumber";
@@ -18,7 +18,7 @@ const schema = z.object({
     .object({
       businessName: z.string().min(2, "Le nom du commerce doit comporter au moins 2 caractères."),
       address: z.string().min(2, "L'adresse doit comporter au moins 2 caractères."),
-      category: z.string().min(2, "La catégorie doit comporter au moins 2 caractères."),
+      category: z.nativeEnum(MerchantCategory, { message: "Catégorie invalide." }),
       iban: z.string().min(10, "L'IBAN doit comporter au moins 10 caractères."),
     })
     .optional(),

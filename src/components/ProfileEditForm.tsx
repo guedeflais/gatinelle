@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import type { MerchantCategory } from "@prisma/client";
+import { MERCHANT_CATEGORY_OPTIONS } from "@/lib/merchantCategory";
 
 interface MerchantInfo {
   businessName: string;
   address: string;
-  category: string;
+  category: MerchantCategory;
   iban: string;
 }
 
@@ -119,14 +121,18 @@ export function ProfileEditForm({ fullName, email, merchant }: ProfileEditFormPr
           </label>
           <label className="flex flex-col gap-1">
             Catégorie
-            <input
-              type="text"
+            <select
               required
-              minLength={2}
               value={values.category}
               onChange={(e) => update("category", e.target.value)}
               className="rounded border border-neutral-300 px-3 py-2"
-            />
+            >
+              {MERCHANT_CATEGORY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="flex flex-col gap-1">
             IBAN (pour les reconversions)
