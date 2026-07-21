@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { MerchantCategory, Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
@@ -10,7 +11,7 @@ import { generateMerchantCode } from "@/lib/merchantCode";
 
 const schema = z.object({
   businessName: z.string().min(2),
-  category: z.string().min(2),
+  category: z.nativeEnum(MerchantCategory, { message: "Catégorie invalide." }),
 });
 
 function randomPassword() {
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
     .slice(0, 30);
 
   const created = await prisma.$transaction(async (tx) => {
-    let user;
+    let user: Prisma.UserGetPayload<{ include: { merchantProfile: true } }> | undefined;
     let attempts = 0;
     for (;;) {
       try {

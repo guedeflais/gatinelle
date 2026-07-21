@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import type { MerchantCategory } from "@prisma/client";
+import { MERCHANT_CATEGORY_OPTIONS } from "@/lib/merchantCategory";
 
 interface StandCredentials {
   email: string;
@@ -11,7 +13,7 @@ interface StandCredentials {
 
 export function StandCreateForm() {
   const [businessName, setBusinessName] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState<MerchantCategory | "">("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState<StandCredentials | null>(null);
@@ -55,15 +57,21 @@ export function StandCreateForm() {
         </label>
         <label className="flex flex-col gap-1">
           Catégorie
-          <input
-            type="text"
+          <select
             required
-            minLength={2}
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={(e) => setCategory(e.target.value as MerchantCategory)}
             className="rounded border border-neutral-300 px-3 py-2"
-            placeholder="Buvette, restauration, artisanat..."
-          />
+          >
+            <option value="" disabled>
+              Choisir une catégorie
+            </option>
+            {MERCHANT_CATEGORY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </label>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
