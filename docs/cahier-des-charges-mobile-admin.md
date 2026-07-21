@@ -201,7 +201,7 @@ personnel, ni du client ni du stand, n'est requis pour lire une carte NFC.
 - Prévoir un mode de repli clair (saisie manuelle du numéro d'adhérent) si un appareil de
   stand ne supporte pas la lecture NFC malgré tout (panne, mauvaise configuration).
 
-### 5.8 Gâtine Box (carte cadeau NFC) 📋 *envisagée*
+### 5.8 Gâtine Box (carte cadeau NFC) ✅ *en production*
 
 La Gâtine Box est une box cadeau contenant une carte NFC, vendue chez **n'importe quel
 commerçant agréé du réseau** (pas seulement en mode festival) — **c'est le client qui
@@ -367,7 +367,16 @@ un :
 C'est pour cette raison que l'hypothèse initiale d'un développement natif via
 Bolt/Expo avait été écartée : elle n'était pas justifiée par le besoin fonctionnel.
 
-### 10.2 Une application native, pour particuliers et commerçants (App Store + Google Play)
+### 10.2 Une application native, pour particuliers et commerçants (App Store + Google Play) 🚧 *développement avancé, pas encore publiée*
+
+**État d'avancement** : l'essentiel des écrans particuliers/commerçants est développé
+et fonctionne contre l'API de production (inscription, connexion, portefeuille et
+historique, achat de gâtinelles — espèces/virement/carte —, paiement chez un
+commerçant, annuaire, modification du profil, reconversion pour les commerçants). Ne
+sont volontairement pas repris côté natif : l'administration (hors périmètre, voir
+ci-dessous) et la **Gâtine Box** (5.8), qui reste pour l'instant web uniquement. Tests
+effectués via Expo Go et des builds internes EAS (`.apk`) ; **publication effective sur
+l'App Store et sur la fiche Google Play existante non encore réalisée**.
 
 Le web/PWA reste pleinement fonctionnel sur iPhone (installation depuis Safari, "Ajouter
 à l'écran d'accueil"), mais **ne peut pas être publié de façon fiable sur l'App Store**
