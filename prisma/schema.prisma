@@ -187,6 +187,7 @@ model StandProduct {
   createdAt         DateTime        @default(now())
 
   @@index([merchantProfileId])
+}
 
 model Wallet {
   id        String   @id @default(cuid())
