@@ -15,12 +15,12 @@ export function BottomNav() {
   const isCommercant = user.accountType === "COMMERCANT";
 
   const items = [
-    { href: "/compte", label: "Portefeuille", icon: Wallet },
+    { href: "/compte", label: "Mon Compte", icon: Wallet },
     isCommercant
       ? { href: "/commercant", label: "Recevoir", icon: QrCode }
       : { href: "/payer", label: "Payer", icon: Send },
     { href: "/annuaire", label: "Commerçants", icon: Store },
-    { href: "/compte/profil", label: "Mon compte", icon: User },
+    { href: "/compte/profil", label: "Profil", icon: User },
   ];
 
   return (
