@@ -11,6 +11,12 @@ export interface TransactionListItem {
   isOutgoing: boolean;
   counterpartyLabel: string | null;
   createdAt: Date;
+  // Un crédit issu de l'activation d'une Gâtine Box est un simple
+  // Transaction de type PURCHASE (voir lib/gatineBox.ts) — ce indicateur
+  // permet de l'afficher distinctement sans ajouter de valeur d'enum
+  // dédiée (qui casserait l'exhaustivité de TRANSACTION_ICONS et fausserait
+  // getCirculationStats, voir lib/wallet.ts).
+  isGatineBox: boolean;
 }
 
 /**
@@ -38,6 +44,12 @@ export async function getTransactionPage(
   const hasMore = rows.length > TRANSACTIONS_PAGE_SIZE;
   const pageRows = rows.slice(0, TRANSACTIONS_PAGE_SIZE);
 
+  const gatineBoxCredits = await prisma.gatineBox.findMany({
+    where: { creditTransactionId: { in: pageRows.map((t) => t.id) } },
+    select: { creditTransactionId: true },
+  });
+  const gatineBoxTransactionIds = new Set(gatineBoxCredits.map((b) => b.creditTransactionId));
+
   const transactions = pageRows.map((t) => {
     const isOutgoing = t.fromUserId === userId;
     // Seul le type PAYMENT a un interlocuteur humain identifiable des deux
@@ -55,6 +67,7 @@ export async function getTransactionPage(
       isOutgoing,
       counterpartyLabel,
       createdAt: t.createdAt,
+      isGatineBox: gatineBoxTransactionIds.has(t.id),
     };
   });
 

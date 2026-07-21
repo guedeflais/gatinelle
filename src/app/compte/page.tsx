@@ -166,7 +166,9 @@ export default async function ComptePage({
                   <Icon size={16} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium">{TRANSACTION_LABELS[t.type] ?? t.type}</p>
+                  <p className="font-medium">
+                    {t.isGatineBox ? "Gâtine Box" : (TRANSACTION_LABELS[t.type] ?? t.type)}
+                  </p>
                   <p className="truncate text-xs text-neutral-500">
                     {t.counterpartyLabel ?? t.createdAt.toLocaleDateString("fr-FR")}
                   </p>
