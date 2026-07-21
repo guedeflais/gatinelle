@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getBalanceCents } from "@/lib/wallet";
 import { formatGatinelles } from "@/lib/money";
 import { ConversionForm } from "@/components/ConversionForm";
+import { GatineBoxSellForm } from "@/components/GatineBoxSellForm";
 
 export default async function CommercantPage() {
   const session = await auth();
@@ -130,6 +131,19 @@ export default async function CommercantPage() {
           </tbody>
         </table>
       </div>
+
+      {merchantProfile.validated && (
+        <div className="flex flex-col gap-4">
+          <h2 className="text-lg font-medium">Vendre une Gâtine Box</h2>
+          <p className="max-w-md text-sm text-neutral-600">
+            Après avoir vérifié que le sceau de garantie de la box est intact, saisissez le
+            numéro de box (visible à l&apos;extérieur de l&apos;emballage) et le prix reçu du
+            client. Vous n&apos;avez à aucun moment accès au code d&apos;activation : seul le
+            bénéficiaire pourra activer la box depuis son propre compte.
+          </p>
+          <GatineBoxSellForm />
+        </div>
+      )}
     </div>
   );
 }

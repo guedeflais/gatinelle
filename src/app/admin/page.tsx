@@ -7,12 +7,19 @@ import { formatGatinelles } from "@/lib/money";
 import { ActionButton } from "@/components/ActionButton";
 import { StandCreateForm } from "@/components/StandCreateForm";
 import { StandProductForm } from "@/components/StandProductForm";
+import { GatineBoxCreateForm } from "@/components/GatineBoxCreateForm";
 import { MERCHANT_CATEGORY_LABELS } from "@/lib/merchantCategory";
 
 const METHOD_LABELS: Record<string, string> = {
   CASH: "Espèces",
   TRANSFER: "Virement",
   CARD: "Carte bancaire",
+};
+
+const GATINE_BOX_STATUS_LABELS: Record<string, string> = {
+  MANUFACTURED: "Confectionnée",
+  SOLD: "Vendue",
+  ACTIVATED: "Activée",
 };
 
 export default async function AdminPage() {
@@ -61,6 +68,21 @@ export default async function AdminPage() {
     ? await prisma.user.findMany({
         where: { pinBlocked: true },
         orderBy: { fullName: "asc" },
+      })
+    : [];
+
+  const gatineBoxes = staffIsAdmin
+    ? await prisma.gatineBox.findMany({
+        select: { id: true, boxNumber: true, status: true, priceCents: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+      })
+    : [];
+
+  const blockedGatineBoxes = staffIsAdmin
+    ? await prisma.gatineBox.findMany({
+        where: { activationBlocked: true },
+        select: { id: true, boxNumber: true },
+        orderBy: { createdAt: "asc" },
       })
     : [];
 
@@ -282,6 +304,73 @@ export default async function AdminPage() {
                 </div>
               ))}
             </div>
+          )}
+        </section>
+      )}
+
+      {staffIsAdmin && (
+        <section>
+          <h2 className="mb-3 text-lg font-medium">Confection Gâtine Box</h2>
+          <p className="mb-3 max-w-md text-sm text-neutral-600">
+            Associe une carte NFC neuve à un numéro de box et un code d&apos;activation.
+            Le numéro de box s&apos;imprime à l&apos;extérieur de l&apos;emballage, le code
+            d&apos;activation sur un papier scellé à l&apos;intérieur.
+          </p>
+          <GatineBoxCreateForm />
+
+          {gatineBoxes.length > 0 && (
+            <table className="mt-6 w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-neutral-500">
+                  <th className="py-2">Numéro de box</th>
+                  <th>Statut</th>
+                  <th>Prix</th>
+                  <th>Créée le</th>
+                </tr>
+              </thead>
+              <tbody>
+                {gatineBoxes.map((b) => (
+                  <tr key={b.id} className="border-b border-neutral-100">
+                    <td className="py-2 font-mono">{b.boxNumber}</td>
+                    <td>{GATINE_BOX_STATUS_LABELS[b.status] ?? b.status}</td>
+                    <td>{b.priceCents !== null ? formatGatinelles(b.priceCents) : "—"}</td>
+                    <td>{b.createdAt.toLocaleDateString("fr-FR")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      )}
+
+      {staffIsAdmin && (
+        <section>
+          <h2 className="mb-3 text-lg font-medium">Gâtine Box bloquées</h2>
+          {blockedGatineBoxes.length === 0 ? (
+            <p className="text-neutral-500">Aucune box bloquée.</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-neutral-500">
+                  <th className="py-2">Numéro de box</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {blockedGatineBoxes.map((b) => (
+                  <tr key={b.id} className="border-b border-neutral-100">
+                    <td className="py-2 font-mono">{b.boxNumber}</td>
+                    <td>
+                      <ActionButton
+                        url="/api/admin/gatine-box/unblock"
+                        body={{ gatineBoxId: b.id }}
+                        label="Débloquer"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </section>
       )}

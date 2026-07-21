@@ -69,6 +69,13 @@ enum MerchantCategory {
   AUTRE
 }
 
+// Cycle de vie d'une Gâtine Box (carte cadeau NFC), voir modèle GatineBox.
+enum GatineBoxStatus {
+  MANUFACTURED
+  SOLD
+  ACTIVATED
+}
+
 model User {
   id                String      @id @default(cuid())
   email             String      @unique
@@ -102,13 +109,16 @@ model User {
   receivedTransactions Transaction[]     @relation("TransactionTo")
   mobileSessions       MobileSession[]
   nfcTags              NfcTag[]
+
+  manufacturedGatineBoxes GatineBox[] @relation("GatineBoxManufacturedBy")
+  activatedGatineBoxes    GatineBox[] @relation("GatineBoxActivatedBy")
 }
 
-// Bracelet/carte NFC lié pour le mode festival : numéro de série d'usine du
-// tag, utilisé comme seule preuve d'autorisation pour les petits paiements
-// au stand (voir payMerchantByWristband dans lib/wallet.ts). Un compte peut
-// posséder plusieurs tags (bracelet perdu et réémis, plusieurs porteurs sur
-// un même compte, etc.) — d'où une table séparée plutôt qu'un champ sur User.
+// Bracelet/carte NFC lié pour le mode festival, et carte liée à l'activation
+// d'une Gâtine Box (voir modèle GatineBox) : numéro de série d'usine du tag.
+// Un compte peut posséder plusieurs tags (bracelet perdu et réémis, carte
+// Gâtine Box ajoutée à un compte déjà existant, etc.) — d'où une table
+// séparée plutôt qu'un champ sur User.
 model NfcTag {
   id        String   @id @default(cuid())
   tagUid    String   @unique
@@ -162,7 +172,8 @@ model MerchantProfile {
   validatedAt   DateTime?
   createdAt     DateTime  @default(now())
 
-  standProducts StandProduct[]
+  standProducts   StandProduct[]
+  soldGatineBoxes GatineBox[]
 }
 
 // Catalogue de produits d'un stand (mode festival) : permet d'encaisser en un
@@ -176,7 +187,6 @@ model StandProduct {
   createdAt         DateTime        @default(now())
 
   @@index([merchantProfileId])
-}
 
 model Wallet {
   id        String   @id @default(cuid())
@@ -223,4 +233,44 @@ model Transaction {
   createdAt             DateTime           @default(now())
 
   @@index([type, status])
+}
+
+// Carte cadeau NFC vendue chez n'importe quel commerçant agréé (pas
+// seulement en mode festival) — voir cahier des charges section 5.8/7.9.
+// Le numéro de box est public (imprimé à l'extérieur de l'emballage, sert à
+// la vente et à l'activation) ; seul le hash du code d'activation (imprimé
+// sur un papier scellé à l'intérieur) est stocké, jamais le code en clair —
+// même principe que pinHash (voir lib/pin.ts). Le prix n'est enregistré
+// qu'une seule fois, à la vente, et n'est plus jamais modifiable ensuite.
+model GatineBox {
+  id                 String          @id @default(cuid())
+  boxNumber          String          @unique
+  nfcTagUid          String          @unique
+  activationCodeHash String
+
+  // Même mécanique de verrouillage que le PIN (voir lib/pin.ts), mais portée
+  // par la box elle-même plutôt que par un compte : n'importe qui possédant
+  // physiquement la box peut tenter l'activation, pas seulement son titulaire.
+  activationFailedAttempts Int     @default(0)
+  activationBlocked        Boolean @default(false)
+
+  status GatineBoxStatus @default(MANUFACTURED)
+
+  manufacturedById String
+  manufacturedBy   User   @relation("GatineBoxManufacturedBy", fields: [manufacturedById], references: [id])
+  createdAt        DateTime @default(now())
+
+  // Renseignés une seule fois, à la vente — jamais modifiés ensuite.
+  priceCents              Int?
+  soldByMerchantProfileId String?
+  soldByMerchantProfile   MerchantProfile? @relation(fields: [soldByMerchantProfileId], references: [id])
+  soldAt                  DateTime?
+
+  // Renseignés une seule fois, à l'activation — jamais modifiés ensuite.
+  activatedByUserId   String?
+  activatedByUser     User?     @relation("GatineBoxActivatedBy", fields: [activatedByUserId], references: [id])
+  activatedAt         DateTime?
+  creditTransactionId String?
+
+  @@index([status])
 }
