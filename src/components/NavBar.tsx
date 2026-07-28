@@ -26,7 +26,7 @@ export function NavBar() {
       <Link href="/annuaire">Annuaire</Link>
       {user.accountType === "COMMERCANT" && <Link href="/commercant">Espace commerçant</Link>}
       {user.accountType === "COMMERCANT" && <Link href="/stand/payer">Encaisser (stand)</Link>}
-      {isStaff && <Link href="/inscription-express">Inscription express</Link>}
+      {isStaff && <Link href="/inscription-express">Festival</Link>}
       {user.accountType !== "COMMERCANT" && <Link href="/gatine-box/activer">Activer une Gâtine Box</Link>}
       {isStaff && <Link href="/admin">Administration</Link>}
       <Link href="/compte/profil">Profil</Link>
