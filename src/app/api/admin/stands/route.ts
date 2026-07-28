@@ -89,6 +89,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     email: created.email,
     password,
+    pin,
     memberNumber: created.memberNumber,
     merchantCode: created.merchantProfile?.merchantCode,
   });

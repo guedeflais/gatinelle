@@ -7,6 +7,7 @@ import { MERCHANT_CATEGORY_OPTIONS } from "@/lib/merchantCategory";
 interface StandCredentials {
   email: string;
   password: string;
+  pin: string;
   memberNumber: string;
   merchantCode: string;
 }
@@ -91,6 +92,7 @@ export function StandCreateForm() {
           <ul className="flex flex-col gap-1 text-leaf-800">
             <li>Email : <span className="font-mono">{created.email}</span></li>
             <li>Mot de passe : <span className="font-mono">{created.password}</span></li>
+            <li>Code PIN : <span className="font-mono">{created.pin}</span></li>
             <li>Numéro d&apos;adhérent : <span className="font-mono">{created.memberNumber}</span></li>
             <li>Code commerçant : <span className="font-mono">{created.merchantCode}</span></li>
           </ul>
