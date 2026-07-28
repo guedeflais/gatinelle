@@ -13,6 +13,7 @@ declare module "next-auth" {
       accountType: AccountType;
       staffRole: StaffRole | null;
       merchantId: string | null;
+      isEventStand: boolean;
     };
   }
 }
@@ -23,6 +24,7 @@ declare module "@auth/core/jwt" {
     accountType: AccountType;
     staffRole: StaffRole | null;
     merchantId: string | null;
+    isEventStand: boolean;
   }
 }
 
@@ -68,6 +70,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.accountType = (user as unknown as { accountType: AccountType }).accountType;
         token.staffRole = (user as unknown as { staffRole: StaffRole | null }).staffRole;
         token.merchantId = (user as unknown as { merchantId: string | null }).merchantId;
+        token.isEventStand = (user as unknown as { isEventStand: boolean }).isEventStand;
       }
       return token;
     },
@@ -76,6 +79,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.accountType = token.accountType;
       session.user.staffRole = token.staffRole;
       session.user.merchantId = token.merchantId;
+      session.user.isEventStand = token.isEventStand;
       return session;
     },
   },

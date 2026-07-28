@@ -19,18 +19,25 @@ export function NavBar() {
   }, [pathname]);
 
   const links = user ? (
-    <>
-      <Link href="/compte">Mon Compte</Link>
-      <Link href="/acheter">Acheter</Link>
-      <Link href="/payer">Payer un commerçant</Link>
-      <Link href="/annuaire">Annuaire</Link>
-      {user.accountType === "COMMERCANT" && <Link href="/commercant">Espace commerçant</Link>}
-      {user.accountType === "COMMERCANT" && <Link href="/stand/payer">Encaisser (stand)</Link>}
-      {isStaff && <Link href="/inscription-express">Festival</Link>}
-      {user.accountType !== "COMMERCANT" && <Link href="/gatine-box/activer">Activer une Gâtine Box</Link>}
-      {isStaff && <Link href="/admin">Administration</Link>}
-      <Link href="/compte/profil">Profil</Link>
-    </>
+    user.isEventStand ? (
+      <>
+        <Link href="/compte">Mon Compte</Link>
+        <Link href="/stand/payer">Encaisser (stand)</Link>
+        <Link href="/compte/profil">Profil</Link>
+      </>
+    ) : (
+      <>
+        <Link href="/compte">Mon Compte</Link>
+        <Link href="/acheter">Acheter</Link>
+        <Link href="/payer">Payer un commerçant</Link>
+        <Link href="/annuaire">Annuaire</Link>
+        {user.accountType === "COMMERCANT" && <Link href="/commercant">Espace commerçant</Link>}
+        {isStaff && <Link href="/inscription-express">Festival</Link>}
+        {user.accountType !== "COMMERCANT" && <Link href="/gatine-box/activer">Activer une Gâtine Box</Link>}
+        {isStaff && <Link href="/admin">Administration</Link>}
+        <Link href="/compte/profil">Profil</Link>
+      </>
+    )
   ) : null;
 
   const authLinks = user ? (

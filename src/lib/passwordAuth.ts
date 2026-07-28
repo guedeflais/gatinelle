@@ -12,6 +12,7 @@ export interface PasswordLoginUser {
   accountType: AccountType;
   staffRole: StaffRole | null;
   merchantId: string | null;
+  isEventStand: boolean;
 }
 
 /**
@@ -68,5 +69,6 @@ export async function attemptPasswordLogin(
     accountType: user.accountType,
     staffRole: user.staffRole,
     merchantId: user.merchantProfile?.id ?? null,
+    isEventStand: user.merchantProfile?.isEventStand ?? false,
   };
 }

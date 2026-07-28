@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { getPostLoginRedirectPath } from "@/lib/postLoginRedirect";
 
 export function PinConnexionForm() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export function PinConnexionForm() {
       );
       return;
     }
-    router.push("/compte");
+    router.push(await getPostLoginRedirectPath());
     router.refresh();
   }
 

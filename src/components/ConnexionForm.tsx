@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { getPostLoginRedirectPath } from "@/lib/postLoginRedirect";
 
 export function ConnexionForm() {
   const router = useRouter();
@@ -25,7 +26,7 @@ export function ConnexionForm() {
       setError("Email ou mot de passe incorrect.");
       return;
     }
-    router.push("/compte");
+    router.push(await getPostLoginRedirectPath());
     router.refresh();
   }
 
