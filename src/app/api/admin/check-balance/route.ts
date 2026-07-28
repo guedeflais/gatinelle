@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { isStaff } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
+import { resolveFestivalAccount } from "@/lib/accountLookup";
 import { getBalanceCents } from "@/lib/wallet";
 
 const schema = z
@@ -26,24 +27,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  let target: { fullName: string; wallet: { id: string } | null } | null;
-  if (parsed.data.tagUid) {
-    const nfcTag = await prisma.nfcTag.findUnique({
-      where: { tagUid: parsed.data.tagUid },
-      include: { user: { include: { wallet: true } } },
-    });
-    target = nfcTag?.user ?? null;
-    if (!target) {
-      return NextResponse.json({ error: "Carte NFC non reconnue." }, { status: 404 });
-    }
-  } else {
-    target = await prisma.user.findUnique({
-      where: { memberNumber: parsed.data.memberNumber!.trim().toUpperCase() },
-      include: { wallet: true },
-    });
-    if (!target) {
-      return NextResponse.json({ error: "Numéro d'adhérent inconnu." }, { status: 404 });
-    }
+  const target = await resolveFestivalAccount(parsed.data);
+  if (!target) {
+    const message = parsed.data.tagUid ? "Carte NFC non reconnue." : "Numéro d'adhérent inconnu.";
+    return NextResponse.json({ error: message }, { status: 404 });
   }
 
   if (!target.wallet) {

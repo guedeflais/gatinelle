@@ -164,6 +164,68 @@ export async function creditAccount(staffUserId: string, targetUserId: string, a
 }
 
 /**
+ * Rembourse en une fois tout le solde restant d'un participant en fin de
+ * festival : les gâtinelles sortent de la circulation (même mécanique que
+ * requestConversion pour un commerçant — vidage des lots ACTIVE, protégé
+ * contre un double remboursement concurrent par le même verrou optimiste
+ * sur remainingCents), en une transaction déjà complétée puisque le staff
+ * remet les espèces en main propre. La commission d'1 € n'est pas modélisée
+ * dans le grand livre (même choix que la commission de reconversion
+ * commerçant) : c'est à l'appelant de calculer le montant à remettre à
+ * partir du solde retourné.
+ */
+export async function refundAccount(staffUserId: string, participantUserId: string) {
+  return prisma.$transaction(async (tx) => {
+    const participant = await tx.user.findUnique({
+      where: { id: participantUserId },
+      include: { wallet: true },
+    });
+    if (!participant?.wallet) throw new NotFoundError("Portefeuille");
+
+    const activeLots = await tx.gatinelleLot.findMany({
+      where: {
+        walletId: participant.wallet.id,
+        status: LotStatus.ACTIVE,
+        remainingCents: { gt: 0 },
+      },
+      orderBy: { acquiredAt: "asc" },
+    });
+
+    let balanceCents = 0;
+    for (const lot of activeLots) {
+      const draw = lot.remainingCents;
+      const result = await tx.gatinelleLot.updateMany({
+        where: { id: lot.id, remainingCents: { gte: draw } },
+        data: { remainingCents: { decrement: draw }, status: LotStatus.CONVERTED },
+      });
+      if (result.count === 0) {
+        throw new InsufficientBalanceError();
+      }
+      balanceCents += draw;
+    }
+
+    if (balanceCents <= 0) {
+      throw new InvalidStateError("Aucun solde à rembourser.");
+    }
+
+    const now = new Date();
+    const transaction = await tx.transaction.create({
+      data: {
+        type: TransactionType.CONVERSION,
+        fromUserId: participantUserId,
+        toUserId: null,
+        amountCents: balanceCents,
+        status: TransactionStatus.COMPLETED,
+        validatedById: staffUserId,
+        validatedAt: now,
+      },
+    });
+
+    return { transaction, balanceCents };
+  });
+}
+
+/**
  * Consomme les lots du payeur les plus proches de l'expiration en premier,
  * puis crédite un lot sans expiration côté destinataire (les gâtinelles
  * détenues par un commerçant n'expirent jamais). Partagé par payMerchant

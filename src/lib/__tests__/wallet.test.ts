@@ -7,6 +7,7 @@ import {
   completeConversion,
   expireLots,
   creditAccount,
+  refundAccount,
   InsufficientBalanceError,
 } from "@/lib/wallet";
 import { generateMerchantCode } from "@/lib/merchantCode";
@@ -315,5 +316,46 @@ describe("creditAccount — crédit direct par le staff (mode festival)", () => 
     const { user: participant } = await createParticulier();
 
     await expect(creditAccount(staff.id, participant.id, 0)).rejects.toThrow();
+  });
+});
+
+describe("refundAccount — remboursement de fin de festival", () => {
+  it("vide tout le solde en une transaction déjà complétée", async () => {
+    const { user: staff } = await createParticulier();
+    const { user: participant, wallet } = await createParticulier();
+    await creditAccount(staff.id, participant.id, 1000);
+
+    const { transaction, balanceCents } = await refundAccount(staff.id, participant.id);
+    expect(balanceCents).toBe(1000);
+    expect(transaction.status).toBe("COMPLETED");
+    expect(transaction.type).toBe("CONVERSION");
+    expect(transaction.amountCents).toBe(1000);
+
+    const balanceAfter = await getBalanceCents(prisma, wallet.id);
+    expect(balanceAfter).toBe(0);
+  });
+
+  it("rejette un remboursement si le solde est nul", async () => {
+    const { user: staff } = await createParticulier();
+    const { user: participant } = await createParticulier();
+
+    await expect(refundAccount(staff.id, participant.id)).rejects.toThrow();
+  });
+
+  it("empêche le double remboursement lors de deux demandes concurrentes", async () => {
+    const { user: staff } = await createParticulier();
+    const { user: participant, wallet } = await createParticulier();
+    await creditAccount(staff.id, participant.id, 500);
+
+    const results = await Promise.allSettled([
+      refundAccount(staff.id, participant.id),
+      refundAccount(staff.id, participant.id),
+    ]);
+
+    const fulfilled = results.filter((r) => r.status === "fulfilled");
+    expect(fulfilled).toHaveLength(1);
+
+    const balance = await getBalanceCents(prisma, wallet.id);
+    expect(balance).toBe(0);
   });
 });
