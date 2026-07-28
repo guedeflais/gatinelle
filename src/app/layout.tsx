@@ -41,6 +41,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#4f8fc0",
+  // Sans ça, Chrome Android en mode standalone (PWA installée) fait
+  // parfois recouvrir le clavier virtuel sur les champs de saisie au lieu
+  // de redimensionner la mise en page pour les garder visibles.
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({
