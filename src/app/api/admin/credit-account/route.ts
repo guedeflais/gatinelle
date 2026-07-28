@@ -6,10 +6,15 @@ import { prisma } from "@/lib/prisma";
 import { eurosToCents } from "@/lib/money";
 import { creditAccount, NotFoundError, InvalidStateError } from "@/lib/wallet";
 
-const schema = z.object({
-  memberNumber: z.string().min(1, "Numéro d'adhérent requis."),
-  amountEuros: z.number().positive().max(10000),
-});
+const schema = z
+  .object({
+    memberNumber: z.string().min(1).optional(),
+    tagUid: z.string().min(1).optional(),
+    amountEuros: z.number().positive().max(10000),
+  })
+  .refine((data) => data.memberNumber || data.tagUid, {
+    message: "Numéro d'adhérent ou carte NFC requis.",
+  });
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -23,11 +28,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const target = await prisma.user.findUnique({
-    where: { memberNumber: parsed.data.memberNumber.trim().toUpperCase() },
-  });
-  if (!target) {
-    return NextResponse.json({ error: "Numéro d'adhérent inconnu." }, { status: 404 });
+  let target: { id: string; fullName: string } | null;
+  if (parsed.data.tagUid) {
+    const nfcTag = await prisma.nfcTag.findUnique({
+      where: { tagUid: parsed.data.tagUid },
+      include: { user: true },
+    });
+    target = nfcTag?.user ?? null;
+    if (!target) {
+      return NextResponse.json({ error: "Carte NFC non reconnue." }, { status: 404 });
+    }
+  } else {
+    target = await prisma.user.findUnique({
+      where: { memberNumber: parsed.data.memberNumber!.trim().toUpperCase() },
+    });
+    if (!target) {
+      return NextResponse.json({ error: "Numéro d'adhérent inconnu." }, { status: 404 });
+    }
   }
 
   try {
