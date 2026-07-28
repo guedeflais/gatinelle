@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { prisma } from "./prisma";
 import type { AccountType, StaffRole } from "@prisma/client";
 
@@ -68,4 +69,20 @@ export async function attemptPinLogin(
     staffRole: user.staffRole,
     merchantId: user.merchantProfile?.id ?? null,
   };
+}
+
+/**
+ * Génère un nouveau PIN aléatoire et le renvoie en clair une seule fois —
+ * utilisé pour transformer un compte inscription express (dont le PIN
+ * initial est aléatoire et jamais affiché, donc inutilisable) en compte
+ * durable que le participant peut désormais utiliser via le PIN quick-login.
+ */
+export async function regeneratePin(userId: string): Promise<string> {
+  const pin = String(crypto.randomInt(0, 10000)).padStart(4, "0");
+  const pinHash = await bcrypt.hash(pin, 10);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { pinHash, pinFailedAttempts: 0, pinBlocked: false },
+  });
+  return pin;
 }

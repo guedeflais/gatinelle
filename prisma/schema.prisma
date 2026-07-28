@@ -114,12 +114,11 @@ model User {
   activatedGatineBoxes    GatineBox[] @relation("GatineBoxActivatedBy")
 }
 
-// Carte/bracelet NFC lié à un compte — utilisé aujourd'hui uniquement par
-// l'activation d'une Gâtine Box (voir modèle GatineBox). Un compte peut
-// posséder plusieurs tags (carte Gâtine Box ajoutée à un compte déjà
-// existant, etc.), d'où une table séparée plutôt qu'un champ sur User. Même
-// structure que le modèle NfcTag de la branche dev (mode festival), pour ne
-// jamais entrer en conflit de schéma le jour où ce mode sera fusionné dans main.
+// Bracelet/carte NFC lié pour le mode festival, et carte liée à l'activation
+// d'une Gâtine Box (voir modèle GatineBox) : numéro de série d'usine du tag.
+// Un compte peut posséder plusieurs tags (bracelet perdu et réémis, carte
+// Gâtine Box ajoutée à un compte déjà existant, etc.) — d'où une table
+// séparée plutôt qu'un champ sur User.
 model NfcTag {
   id        String   @id @default(cuid())
   tagUid    String   @unique
@@ -164,12 +163,30 @@ model MerchantProfile {
   iban          String?
   merchantCode  String    @unique
   validated     Boolean   @default(false)
+  // Stand créé pour un événement (voir /api/admin/stands) plutôt qu'un
+  // commerçant permanent — permet de le retrouver même après modification
+  // de ses autres informations (adresse, catégorie...).
+  isEventStand  Boolean   @default(false)
   validatedById String?
   validatedBy   User?     @relation("MerchantValidatedBy", fields: [validatedById], references: [id])
   validatedAt   DateTime?
   createdAt     DateTime  @default(now())
 
+  standProducts   StandProduct[]
   soldGatineBoxes GatineBox[]
+}
+
+// Catalogue de produits d'un stand (mode festival) : permet d'encaisser en un
+// clic (voir StandPaymentForm) plutôt que de taper un montant à la main.
+model StandProduct {
+  id                String          @id @default(cuid())
+  merchantProfileId String
+  merchantProfile   MerchantProfile @relation(fields: [merchantProfileId], references: [id], onDelete: Cascade)
+  name              String
+  priceCents        Int
+  createdAt         DateTime        @default(now())
+
+  @@index([merchantProfileId])
 }
 
 model Wallet {
