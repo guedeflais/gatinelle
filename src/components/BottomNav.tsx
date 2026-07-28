@@ -14,14 +14,20 @@ export function BottomNav() {
 
   const isCommercant = user.accountType === "COMMERCANT";
 
-  const items = [
-    { href: "/compte", label: "Mon Compte", icon: Wallet },
-    isCommercant
-      ? { href: "/commercant", label: "Recevoir", icon: QrCode }
-      : { href: "/payer", label: "Payer", icon: Send },
-    { href: "/annuaire", label: "Commerçants", icon: Store },
-    { href: "/compte/profil", label: "Profil", icon: User },
-  ];
+  const items = user.isEventStand
+    ? [
+        { href: "/compte", label: "Mon Compte", icon: Wallet },
+        { href: "/stand/payer", label: "Encaisser", icon: QrCode },
+        { href: "/compte/profil", label: "Profil", icon: User },
+      ]
+    : [
+        { href: "/compte", label: "Mon Compte", icon: Wallet },
+        isCommercant
+          ? { href: "/commercant", label: "Recevoir", icon: QrCode }
+          : { href: "/payer", label: "Payer", icon: Send },
+        { href: "/annuaire", label: "Commerçants", icon: Store },
+        { href: "/compte/profil", label: "Profil", icon: User },
+      ];
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-10 flex border-t border-neutral-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
