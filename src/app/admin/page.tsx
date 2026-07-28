@@ -7,6 +7,7 @@ import { formatGatinelles } from "@/lib/money";
 import { ActionButton } from "@/components/ActionButton";
 import { StandCreateForm } from "@/components/StandCreateForm";
 import { StandProductForm } from "@/components/StandProductForm";
+import { StandBalanceExportForm } from "@/components/StandBalanceExportForm";
 import { GatineBoxCreateForm } from "@/components/GatineBoxCreateForm";
 import { MERCHANT_CATEGORY_LABELS } from "@/lib/merchantCategory";
 
@@ -258,6 +259,10 @@ export default async function AdminPage() {
 
           {activeStands.length > 0 && (
             <div className="mt-6 flex flex-col gap-4">
+              <StandBalanceExportForm
+                stands={activeStands.map((m) => ({ id: m.id, businessName: m.businessName }))}
+              />
+
               <h3 className="text-sm font-medium text-neutral-700">
                 Stands actifs (retirer après l&apos;événement)
               </h3>
