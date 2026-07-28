@@ -5,7 +5,11 @@ import { isNfcSupported, scanNfcTag } from "@/lib/nfc";
 
 type Step = "form" | "link-nfc" | "done";
 
-export function InscriptionExpressForm() {
+interface InscriptionExpressFormProps {
+  onCreated?: (memberNumber: string) => void;
+}
+
+export function InscriptionExpressForm({ onCreated }: InscriptionExpressFormProps = {}) {
   const [step, setStep] = useState<Step>("form");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -34,6 +38,7 @@ export function InscriptionExpressForm() {
     const data = await res.json();
     setUserId(data.id);
     setMemberNumber(data.memberNumber);
+    onCreated?.(data.memberNumber);
     setStep(isNfcSupported() ? "link-nfc" : "done");
   }
 

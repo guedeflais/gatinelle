@@ -6,6 +6,7 @@ import {
   requestConversion,
   completeConversion,
   expireLots,
+  creditAccount,
   InsufficientBalanceError,
 } from "@/lib/wallet";
 import { generateMerchantCode } from "@/lib/merchantCode";
@@ -293,5 +294,26 @@ describe("expireLots", () => {
 
     const balance = await getBalanceCents(prisma, wallet.id);
     expect(balance).toBe(500);
+  });
+});
+
+describe("creditAccount — crédit direct par le staff (mode festival)", () => {
+  it("crédite immédiatement le compte, en une transaction déjà complétée", async () => {
+    const { user: staff } = await createParticulier();
+    const { user: participant, wallet } = await createParticulier();
+
+    const transaction = await creditAccount(staff.id, participant.id, 1000);
+    expect(transaction.status).toBe("COMPLETED");
+    expect(transaction.paymentMethod).toBe("CASH");
+
+    const balance = await getBalanceCents(prisma, wallet.id);
+    expect(balance).toBe(1000);
+  });
+
+  it("rejette un montant négatif ou nul", async () => {
+    const { user: staff } = await createParticulier();
+    const { user: participant } = await createParticulier();
+
+    await expect(creditAccount(staff.id, participant.id, 0)).rejects.toThrow();
   });
 });

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { isStaff } from "@/lib/authz";
-import { InscriptionExpressForm } from "@/components/InscriptionExpressForm";
+import { FestivalCounterPanel } from "@/components/FestivalCounterPanel";
 
 export default async function InscriptionExpressPage() {
   const session = await auth();
@@ -14,7 +14,7 @@ export default async function InscriptionExpressPage() {
         Pour un événement (marché, festival) : créez rapidement un compte avec juste un
         nom et un email, puis liez le bracelet ou la carte du participant.
       </p>
-      <InscriptionExpressForm />
+      <FestivalCounterPanel />
     </div>
   );
 }

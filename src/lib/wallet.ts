@@ -125,6 +125,45 @@ export async function validatePurchase(transactionId: string, validatorUserId: s
 }
 
 /**
+ * Crédite directement le compte d'un participant (mode festival) : contrairement
+ * à requestPurchase/validatePurchase, la transaction est créée déjà complétée,
+ * puisque le staff encaisse les espèces en direct au comptoir — il n'y a rien à
+ * valider a posteriori. Réservé aux comptes Agent/Admin (voir isStaff), sur le
+ * même principe que la validation des achats en espèces existante.
+ */
+export async function creditAccount(staffUserId: string, targetUserId: string, amountCents: number) {
+  if (amountCents <= 0) {
+    throw new InvalidStateError("Le montant doit être positif.");
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const target = await tx.user.findUnique({
+      where: { id: targetUserId },
+      include: { wallet: true },
+    });
+    if (!target?.wallet) throw new NotFoundError("Portefeuille");
+
+    const now = new Date();
+    const transaction = await tx.transaction.create({
+      data: {
+        type: TransactionType.PURCHASE,
+        fromUserId: null,
+        toUserId: targetUserId,
+        amountCents,
+        paymentMethod: PaymentMethod.CASH,
+        status: TransactionStatus.COMPLETED,
+        validatedById: staffUserId,
+        validatedAt: now,
+      },
+    });
+
+    await createPurchaseLot(tx, target.wallet.id, target.accountType, amountCents, transaction.id, now);
+
+    return transaction;
+  });
+}
+
+/**
  * Consomme les lots du payeur les plus proches de l'expiration en premier,
  * puis crédite un lot sans expiration côté destinataire (les gâtinelles
  * détenues par un commerçant n'expirent jamais). Partagé par payMerchant
