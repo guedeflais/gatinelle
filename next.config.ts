@@ -3,9 +3,9 @@ import type { NextConfig } from "next";
 // CSP pragmatique : pas de nonces (demanderait un middleware dédié et plus de
 // tests), mais bloque déjà le chargement de scripts/connexions vers des
 // domaines externes non prévus, l'embarquement du site dans une iframe
-// tierce, et restreint les formulaires à notre origine + Up2Pay
-// e-Transactions (seule soumission de formulaire vers un autre domaine dans
-// l'appli, voir AcheterForm).
+// tierce, et restreint les formulaires à notre origine (le paiement par carte
+// redirige vers la page hébergée CAWL par simple navigation, voir
+// AcheterForm — aucune soumission de formulaire vers un autre domaine).
 const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
@@ -13,7 +13,7 @@ const csp = [
   "img-src 'self' data: https://*.tile.openstreetmap.org",
   "font-src 'self'",
   "connect-src 'self'",
-  "form-action 'self' https://*.e-transactions.fr",
+  "form-action 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",

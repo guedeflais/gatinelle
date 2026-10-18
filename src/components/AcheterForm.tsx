@@ -37,24 +37,10 @@ export function AcheterForm({ associationIban }: { associationIban: string }) {
         setError(typeof data.error === "string" ? data.error : "Impossible de lancer le paiement.");
         return;
       }
-      const { actionUrl, fields } = (await res.json()) as {
-        actionUrl: string;
-        fields: { name: string; value: string }[];
-      };
-      // Up2Pay exige une vraie soumission de formulaire POST (pas une simple
-      // redirection GET) : on construit et soumet un formulaire caché.
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = actionUrl;
-      for (const field of fields) {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = field.name;
-        input.value = field.value;
-        form.appendChild(input);
-      }
-      document.body.appendChild(form);
-      form.submit();
+      // Redirection vers la page de paiement hébergée par CAWL (le bouton
+      // reste en attente le temps de la navigation).
+      const { redirectUrl } = (await res.json()) as { redirectUrl: string };
+      window.location.href = redirectUrl;
       return;
     }
 

@@ -50,8 +50,8 @@ export default function ConfidentialitePage() {
         <p className="text-neutral-700">
           Les données sont accessibles aux membres habilités de l&apos;association
           (administrateurs, bénévoles de comptoir) dans la limite de leurs fonctions. Pour les
-          paiements par carte bancaire, les données de paiement transitent par Up2Pay
-          e-Transactions (Crédit Agricole) et ne sont jamais stockées par
+          paiements par carte bancaire, les données de paiement transitent par CAWL
+          E-COMMERCE (Crédit Agricole) et ne sont jamais stockées par
           l&apos;application. L&apos;hébergement technique est assuré par Vercel Inc. et
           Prisma (Prisma Data, Inc.) — voir les{" "}
           <a href="/mentions-legales" className="text-brand-700 underline">

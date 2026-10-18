@@ -103,8 +103,7 @@ export default async function ComptePage({
 
       {achat === "succes" && (
         <p className="rounded border border-leaf-300 bg-leaf-50 p-4 text-leaf-900">
-          Paiement reçu, en cours de validation par Up2Pay. Votre solde sera mis à jour
-          automatiquement dans quelques instants.
+          Paiement accepté. Vos gâtinelles ont été ajoutées à votre solde.
         </p>
       )}
       {achat === "attente" && (

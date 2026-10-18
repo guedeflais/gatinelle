@@ -43,29 +43,35 @@ bascule). Modèle repris de l'Eusko / euskopay (Euskal Moneta, Pays Basque).
 - La session dure 90 jours (`maxAge` dans `src/lib/auth.ts`) : sur son propre
   téléphone, l'adhérent n'a normalement à se reconnecter que rarement.
 
-## Paiement par carte (Up2Pay e-Transactions — Crédit Agricole)
+## Paiement par carte (CAWL E-COMMERCE — Crédit Agricole)
 
-Le paiement CB redirige vers la page hébergée Up2Pay e-Transactions (protocole
-`PBX_*`, signature HMAC-SHA512 pour nos envois, signature RSA-SHA1 pour leurs
-réponses). Voir `src/lib/up2pay.ts`.
+Le paiement CB redirige vers la page hébergée CAWL E-COMMERCE (API REST,
+requêtes signées HMAC-SHA256 « GCS v1HMAC »). Voir `src/lib/cawl.ts` et
+`src/lib/cardPurchase.ts`. Documentation : https://docs.ecommerce.cawl-solutions.fr
 
-- `.env` contient par défaut les identifiants du **compte de démonstration
-  mutualisé et public** fourni par Crédit Agricole (SITE 1999887 / RANG 32 /
-  IDENTIFIANT 215), utilisable tel quel contre l'environnement de recette
-  (`https://preprod-tpeweb.e-transactions.fr/php/`) pour tester le parcours
-  sans compte marchand réel. Carte de test : `1111 2222 3333 4444`, date et
-  CVV quelconques.
-- Avant la mise en production, remplacez `UP2PAY_SITE` / `UP2PAY_RANG` /
-  `UP2PAY_IDENTIFIANT` / `UP2PAY_HMAC_KEY` par les identifiants de **votre**
-  boutique (Back-Office Vision Air, onglet Paramètres) et `UP2PAY_PAYMENT_URL`
-  par `https://tpeweb.e-transactions.fr/php/`.
-- La notification serveur à serveur (IPN, `/api/up2pay/ipn`) est la seule
-  source fiable de crédit du compte — elle nécessite que votre application
-  soit joignable publiquement en HTTPS depuis internet (pas testable en
-  `localhost` sans tunnel type ngrok). Les URL de retour navigateur
-  (`/compte?achat=...`) ne sont qu'un confort d'affichage.
-- `UP2PAY_PUBLIC_KEY` (clé RSA de vérification des réponses) est fixe et ne
-  dépend pas de votre compte marchand.
+Parcours : `POST /api/purchases/card` crée la transaction (PENDING) et une
+session de paiement CAWL, puis le client est redirigé vers CAWL. À son retour
+(`/api/cawl/retour`), le serveur interroge CAWL et crédite le compte si le
+paiement est capturé (CAPTURED). Le **webhook** (`/api/cawl/webhook`) couvre
+le cas où le client ferme son navigateur avant de revenir : les deux chemins
+peuvent se produire en même temps, un seul crédite (mise à jour gardée).
+
+Configuration (variables d'environnement, voir `.env.example`) :
+
+- `CAWL_MERCHANT_ID` : identifiant marchand (PSPID).
+- `CAWL_API_KEY_ID` / `CAWL_API_SECRET` : clé API (portail marchand,
+  Développeur). Les clés de **test** et de **production** sont différentes.
+- `CAWL_API_URL` : `https://payment.preprod.cawl-solutions.fr` (test, par
+  défaut) ou `https://payment.cawl-solutions.fr` (production).
+- `CAWL_WEBHOOK_KEY_ID` / `CAWL_WEBHOOK_SECRET` : clé de webhook (portail,
+  Développeur > Webhooks ; le secret n'est affiché que 60 secondes). L'URL à
+  déclarer est `https://<votre-domaine>/api/cawl/webhook`.
+- Portails marchands : test `https://portail.preprod.cawl-solutions.fr/`,
+  production `https://portail.cawl-solutions.fr/`.
+- Tant que `CAWL_MERCHANT_ID` / `CAWL_API_KEY_ID` / `CAWL_API_SECRET` sont
+  vides, le paiement par carte répond « pas encore configuré » (503).
+- Le webhook et le retour client nécessitent un site joignable publiquement en
+  HTTPS (pas testable en `localhost` sans tunnel type ngrok).
 
 ## Job de péremption
 

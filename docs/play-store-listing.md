@@ -63,7 +63,7 @@ Données collectées et pourquoi :
 | Nom complet | Oui | Identification du compte | Non |
 | Informations financières (solde de gâtinelles, historique de transactions) | Oui | Fonctionnement du service (portefeuille de monnaie locale) | Non |
 | IBAN (commerçants uniquement, pour la reconversion) | Oui | Versement des reconversions en euros | Non (transmis uniquement à la banque de l'association pour effectuer le virement) |
-| Identifiants de paiement par carte | Non — géré directement par Up2Pay/Crédit Agricole, jamais stocké par l'application | — | — |
+| Identifiants de paiement par carte | Non — géré directement par CAWL/Crédit Agricole, jamais stocké par l'application | — | — |
 
 Pratiques de sécurité à déclarer :
 - Données chiffrées en transit (HTTPS/TLS)
